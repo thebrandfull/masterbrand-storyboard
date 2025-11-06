@@ -38,13 +38,11 @@ export function BrandSelector({ brands, selectedBrandId, onBrandChange }: BrandS
 
   return (
     <Select value={selectedBrandId} onValueChange={onBrandChange}>
-      <SelectTrigger className="w-[280px] glass border-white/10">
-        <div className="flex items-center gap-2">
-          <Layers className="h-4 w-4 text-primary" />
-          <SelectValue placeholder="Select a brand" />
-        </div>
+      <SelectTrigger className="flex w-[280px] items-center gap-2 rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
+        <Layers className="h-4 w-4 text-[#ff2a2a]" />
+        <SelectValue placeholder="Select a brand" />
       </SelectTrigger>
-      <SelectContent className="glass border-white/10">
+      <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
         {brands.map((brand) => (
           <SelectItem key={brand.id} value={brand.id}>
             {brand.name}

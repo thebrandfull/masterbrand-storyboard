@@ -43,15 +43,17 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
 
   if (brandList.length === 0) {
     return (
-      <div className="min-h-screen p-8 flex flex-col items-center justify-center text-center space-y-4">
-        <h1 className="text-3xl font-bold">Content hub</h1>
-        <p className="text-white/60 max-w-lg">
-          Add your first brand to start generating content. Once a brand exists, this hub will track every piece of
-          content across the workflow.
-        </p>
-        <Button asChild>
-          <Link href="/brands">Create a brand</Link>
-        </Button>
+      <div className="flex min-h-screen items-center justify-center px-6 text-center">
+        <Card className="w-full max-w-xl space-y-4 p-10">
+          <p className="text-xs uppercase tracking-[0.4em] text-white/50">Content hub</p>
+          <h1 className="text-3xl font-semibold">Add a brand to start shipping</h1>
+          <p className="text-white/70">
+            Once a brand exists, every piece of content will flow through this pipeline—from idea to publish.
+          </p>
+          <Button asChild className="rounded-full bg-[#ff2a2a] hover:bg-[#ff2a2a]/90">
+            <Link href="/brands">Create a brand</Link>
+          </Button>
+        </Card>
       </div>
     )
   }
@@ -64,84 +66,86 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
   }))
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-10">
+      <section className="hero-panel p-6 sm:p-10">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Content hub</h1>
-            <p className="text-white/60">Track every piece of content from idea to publish for this brand.</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-white/50">Content hub</p>
+            <h1 className="text-4xl font-semibold">Every piece, every stage</h1>
+            <p className="mt-2 text-white/70">
+              Track content for {brandList.find((brand) => brand.id === activeBrandId)?.name || "your brand"} from idea
+              to publish.
+            </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <ContentBrandFilter brands={brandList} activeBrandId={activeBrandId} />
-            <Button asChild>
+            <Button asChild className="rounded-full bg-[#ff2a2a] hover:bg-[#ff2a2a]/90">
               <Link href="/content/new">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4" />
                 New content
               </Link>
             </Button>
           </div>
         </div>
 
-        <Card className="glass p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {statusSummary.map((stage) => (
-              <div key={stage.key} className="glass rounded-xl border border-white/10 p-4">
-                <p className="text-xs text-white/50 uppercase tracking-wide">{stage.label}</p>
-                <p className="text-2xl font-semibold">{stage.total}</p>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {statusSummary.map((stage) => (
+            <div key={stage.key} className="rounded-2xl border border-white/10 bg-black/30 px-4 py-5">
+              <p className="text-xs uppercase tracking-[0.4em] text-white/40">{stage.label}</p>
+              <p className="mt-2 text-3xl font-semibold">{stage.total}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <Card className="p-6 sm:p-8">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-white">Upcoming content</h2>
+            <p className="text-sm text-white/60">
+              Showing the next {items.length} items for{" "}
+              {brandList.find((brand) => brand.id === activeBrandId)?.name || "selected brand"}.
+            </p>
+          </div>
+          <Button variant="ghost" asChild className="rounded-full border border-white/10 text-white hover:bg-white/5">
+            <Link href={`/calendar?brand=${activeBrandId}`}>
+              Calendar sync
+              <ArrowUpRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="mt-8 rounded-3xl border border-dashed border-white/15 p-10 text-center text-white/60">
+            No content yet for this brand. Generate your first piece.
+          </div>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="flex flex-col gap-4 rounded-3xl border border-white/5 bg-black/20 px-5 py-4 md:flex-row md:items-center md:justify-between"
+              >
+                <div>
+                  <p className="text-xs uppercase tracking-[0.4em] text-white/40">{formatDate(item.date_target)}</p>
+                  <h3 className="mt-2 text-lg font-semibold text-white">{deriveTopic(item)}</h3>
+                  <p className="text-sm text-white/60">
+                    {item.brands?.name || "Unknown brand"} • {item.platform}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge variant="outline" className={cn("capitalize", getStatusColor(item.status))}>
+                    {item.status}
+                  </Badge>
+                  <Button variant="secondary" asChild size="sm" className="rounded-full border border-white/10">
+                    <Link href={`/content/${item.id}`}>Open</Link>
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
-        </Card>
-
-        <Card className="glass p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-semibold">Upcoming content</h2>
-              <p className="text-white/60 text-sm">
-                Showing the next {items.length} items for{" "}
-                {brandList.find((brand) => brand.id === activeBrandId)?.name || "selected brand"}.
-              </p>
-            </div>
-            <Button variant="ghost" asChild>
-              <Link href={`/calendar?brand=${activeBrandId}`}>
-                View calendar
-                <ArrowUpRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
-          </div>
-
-          {items.length === 0 ? (
-            <div className="border border-dashed border-white/10 rounded-xl p-8 text-center text-white/60">
-              No content yet for this brand. Generate your first piece.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="glass rounded-xl border border-white/5 px-5 py-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-                >
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-white/40">{formatDate(item.date_target)}</p>
-                    <h3 className="text-lg font-semibold mt-1">{deriveTopic(item)}</h3>
-                    <p className="text-sm text-white/60">
-                      {item.brands?.name || "Unknown brand"} • {item.platform}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className={cn("capitalize", getStatusColor(item.status))}>
-                      {item.status}
-                    </Badge>
-                    <Button variant="secondary" asChild size="sm">
-                      <Link href={`/content/${item.id}`}>Open</Link>
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
+        )}
+      </Card>
     </div>
   )
 }

@@ -829,6 +829,16 @@ For issues or questions:
 
 ---
 
+## Hotfix: Content Notes Migration
+**Date**: Today  
+**Status**: ✅ Complete
+
+### Highlights
+- Added `20250110133000_add_content_item_notes_and_attachments.sql` to backfill the `notes` and `attachments` columns on existing Supabase projects without re-running the full bootstrap schema.
+- Triggered a PostgREST schema cache reload in the migration so the new columns are queryable immediately after deployment, preventing the “Could not find the 'notes' column…” errors when inserting content items.
+
+---
+
 ## Recent Updates Summary
 
 **Latest Deliverables**

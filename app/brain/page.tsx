@@ -8,19 +8,18 @@ export default async function BrandBrainPage() {
   const { brands } = await getBrands()
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <Card className="glass p-6">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-3xl font-bold">Brand Chat</h1>
-            <p className="text-white/60">
-              Talk to your brand brain, get instant answers, and convert replies into actions.
-            </p>
-          </div>
-        </Card>
+    <div className="space-y-8">
+      <Card className="hero-panel p-6 sm:p-10">
+        <div className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.4em] text-white/50">Brand Brain</p>
+          <h1 className="text-4xl font-semibold text-white">Talk to your playbook</h1>
+          <p className="text-white/70">
+            Ask strategy questions, generate prompts, and turn replies into action without leaving the studio.
+          </p>
+        </div>
+      </Card>
 
-        <BrandChat brands={brands || []} />
-      </div>
+      <BrandChat brands={brands || []} />
     </div>
   )
 }

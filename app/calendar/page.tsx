@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { getBrands } from "@/lib/actions/brands"
 import { createContentItem, getContentItemsByBrand } from "@/lib/actions/content"
 import { Badge } from "@/components/ui/badge"
-import { getStatusColor } from "@/lib/utils"
+import { cn, getStatusColor } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns"
 import Link from "next/link"
@@ -141,100 +141,94 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <p className="text-white/60">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <div className="space-y-10">
+      <section className="hero-panel p-6 sm:p-10">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Content Calendar</h1>
-            <p className="text-white/60">Plan and visualize your content schedule</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-white/50">Content calendar</p>
+            <h1 className="text-4xl font-semibold">{format(currentDate, "MMMM yyyy")}</h1>
+            <p className="mt-2 text-white/70">
+              Plan and visualize your content schedule with live status filtering.
+            </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <BrandSelector
               brands={brands}
               selectedBrandId={selectedBrandId}
               onBrandChange={setSelectedBrandId}
             />
+            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/30 p-2">
+              <Button variant="ghost" className="rounded-full text-white hover:bg-white/10" onClick={handleToday}>
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10" onClick={handlePreviousMonth}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10" onClick={handleNextMonth}>
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* Calendar Controls */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold">{format(currentDate, "MMMM yyyy")}</h2>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleToday} className="glass">
-              Today
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handlePreviousMonth}>
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleNextMonth}>
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {monthlyStats.map((stat) => (
-            <Card
-              key={stat.value}
-              className={`glass p-4 cursor-pointer ${stat.active ? "ring-1 ring-primary" : ""}`}
-              onClick={() => toggleStatus(stat.value)}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-white/50">{stat.label}</p>
-                  <p className="text-2xl font-semibold">{stat.count}</p>
-                </div>
-                <Badge className={getStatusColor(stat.value)}>{stat.active ? "On" : "Off"}</Badge>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {monthlyStats.map((stat) => (
+          <Card
+            key={stat.value}
+            className={cn(
+              "cursor-pointer border-white/10 bg-[#111111]/70 p-4",
+              stat.active ? "ring-1 ring-[#ff2a2a]" : ""
+            )}
+            onClick={() => toggleStatus(stat.value)}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-[0.4em] text-white/40">{stat.label}</p>
+                <p className="mt-2 text-3xl font-semibold">{stat.count}</p>
               </div>
-            </Card>
+              <Badge className={getStatusColor(stat.value)}>{stat.active ? "On" : "Off"}</Badge>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="p-6">
+        <div className="mb-6 grid grid-cols-7 gap-4 text-center text-sm font-semibold text-white/60">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+            <div key={day}>{day}</div>
           ))}
         </div>
+        <div className="grid grid-cols-7 gap-4">
+          {allDays.map((day, index) => {
+            if (!day) {
+              return <div key={`empty-${index}`} className="h-32 rounded-2xl border border-dashed border-white/5" />
+            }
 
-        {/* Calendar Grid */}
-        <div className="glass rounded-lg p-6">
-          {/* Weekday Headers */}
-          <div className="grid grid-cols-7 gap-4 mb-4">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-              <div key={day} className="text-center text-sm font-semibold text-white/60">
-                {day}
-              </div>
-            ))}
-          </div>
+            const dateKey = format(day, "yyyy-MM-dd")
+            const dayContent = contentByDate[dateKey] || []
+            const isToday = isSameDay(day, new Date())
 
-          {/* Calendar Days */}
-          <div className="grid grid-cols-7 gap-4">
-            {allDays.map((day, index) => {
-              if (!day) {
-                return <div key={`empty-${index}`} className="h-32" />
-              }
-
-              const dateKey = format(day, "yyyy-MM-dd")
-              const dayContent = contentByDate[dateKey] || []
-              const isToday = isSameDay(day, new Date())
-
-              return (
-                <DayCard
-                  key={dateKey}
-                  day={day}
-                  currentDate={currentDate}
-                  items={dayContent}
-                  isToday={isToday}
-                  brandId={selectedBrandId}
-                />
-              )
-            })}
-          </div>
+            return (
+              <DayCard
+                key={dateKey}
+                day={day}
+                currentDate={currentDate}
+                items={dayContent}
+                isToday={isToday}
+                brandId={selectedBrandId}
+              />
+            )
+          })}
         </div>
-      </div>
+      </Card>
     </div>
   )
 }
@@ -281,44 +275,48 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
     <Dialog>
       <DialogTrigger asChild>
         <Card
-          className={`glass p-3 h-32 cursor-pointer hover:bg-white/10 smooth overflow-hidden ${
-            isToday ? "ring-2 ring-primary" : ""
-          }`}
+          className={cn(
+            "h-32 cursor-pointer overflow-hidden border-white/10 bg-[#0b0b0b]/85 p-3 transition hover:-translate-y-0.5 hover:border-[#ff2a2a]/40",
+            isToday ? "ring-2 ring-[#ff2a2a]" : ""
+          )}
         >
-          <div className="flex items-start justify-between mb-2">
-            <span className={`text-sm font-semibold ${isSameMonth(day, currentDate) ? "" : "text-white/30"}`}>
+          <div className="mb-2 flex items-start justify-between">
+            <span className={cn("text-sm font-semibold", isSameMonth(day, currentDate) ? "" : "text-white/30")}>
               {format(day, "d")}
             </span>
             {items.length > 0 && (
-              <Badge variant="secondary" className="text-xs h-5 px-1.5">
+              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
                 {items.length}
               </Badge>
             )}
           </div>
           <div className="space-y-1">
             {items.slice(0, 2).map((item) => (
-              <div key={item.id} className={`text-xs px-2 py-1 rounded truncate ${getStatusColor(item.status)}`}>
+              <div
+                key={item.id}
+                className={cn("truncate rounded-full px-3 py-1 text-xs font-medium", getStatusColor(item.status))}
+              >
                 {item.platform}
               </div>
             ))}
-            {items.length > 2 && <div className="text-xs text-white/40 pl-2">+{items.length - 2} more</div>}
+            {items.length > 2 && <div className="pl-2 text-xs text-white/40">+{items.length - 2} more</div>}
           </div>
         </Card>
       </DialogTrigger>
-      <DialogContent className="glass">
+      <DialogContent className="max-w-lg rounded-3xl border border-white/10 bg-[#111111]/90">
         <DialogHeader>
-          <DialogTitle>{format(day, "MMMM d, yyyy")}</DialogTitle>
+          <DialogTitle className="text-2xl font-semibold text-white">{format(day, "MMMM d, yyyy")}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3 mt-4 max-h-[60vh] overflow-y-auto">
+        <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto">
           {items.length === 0 ? (
-            <p className="text-sm text-white/60 text-center py-8">No content scheduled for this day</p>
+            <p className="py-8 text-center text-sm text-white/60">No content scheduled for this day</p>
           ) : (
             items.map((item) => (
               <Link key={item.id} href={`/content/${item.id}`}>
-                <Card className="glass p-4 cursor-pointer hover:bg-white/10 smooth">
+                <Card className="cursor-pointer border-white/10 bg-[#0c0c0c]/80 p-4 transition hover:border-[#ff2a2a]/40">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold capitalize">{item.platform}</div>
+                      <div className="font-semibold capitalize text-white">{item.platform}</div>
                       <div className="text-xs text-white/60">ID: {item.id.slice(0, 8)}</div>
                     </div>
                     <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
@@ -328,14 +326,14 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
             ))
           )}
         </div>
-        <div className="border-t border-white/10 pt-4 mt-4 space-y-3">
+        <div className="mt-4 border-t border-white/10 pt-4">
           <p className="text-sm font-semibold text-white/80">Quick create</p>
-          <div className="flex flex-col md:flex-row md:items-center gap-3">
+          <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center">
             <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger className="glass">
+              <SelectTrigger className="rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
                 <SelectValue placeholder="Platform" />
               </SelectTrigger>
-              <SelectContent className="glass">
+              <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
                 {platformOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -343,8 +341,12 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={handleCreate} disabled={creating || !brandId}>
-              {creating ? <LoaderIcon /> : <Plus className="h-4 w-4 mr-2" />}
+            <Button
+              onClick={handleCreate}
+              disabled={creating || !brandId}
+              className="rounded-full bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+            >
+              {creating ? <LoaderIcon /> : <Plus className="mr-2 h-4 w-4" />}
               {creating ? "Creating..." : "Create slot"}
             </Button>
           </div>

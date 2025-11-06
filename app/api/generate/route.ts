@@ -3,10 +3,12 @@ import { DeepSeekError, generateContent } from "@/lib/deepseek"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database"
 import type { PromptGenerationRequest } from "@/lib/deepseek"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
 const SUPPORTED_PLATFORMS = ["tiktok", "instagram", "youtube"]
 
 export async function POST(request: NextRequest) {
+  const db = supabase as SupabaseClient<Database>
   try {
     const body = await request.json()
     const { brandId, topic, platform, dateTarget } = body ?? {}
@@ -28,25 +30,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch brand data
-    const { data, error: brandError } = await supabase
+    const { data: brand, error: brandError } = await db
       .from("brands")
       .select("*")
       .eq("id", brandId)
       .single()
 
-    if (brandError || !data) {
+    if (brandError || !brand) {
       return NextResponse.json(
         { error: "Brand not found" },
         { status: 404 }
       )
     }
 
-    const brand = data as Database["public"]["Tables"]["brands"]["Row"]
-    const visualKeywords = parseVisualKeywords(brand.visual_lexicon)
-    const negativePrompts = Array.isArray(brand.negative_prompts) ? brand.negative_prompts : []
+    const brandRecord = brand as Database["public"]["Tables"]["brands"]["Row"]
+    const visualKeywords = parseVisualKeywords(brandRecord.visual_lexicon)
+    const negativePrompts = Array.isArray(brandRecord.negative_prompts)
+      ? brandRecord.negative_prompts
+      : []
 
     const generated = await generateContent({
-      brand: brand as PromptGenerationRequest["brand"],
+      brand: brandRecord as PromptGenerationRequest["brand"],
       topic: sanitizedTopic,
       platform: normalizedPlatform,
       visualKeywords,
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create content item
-    const contentInsert: Database["public"]["Tables"]["content_items"]["Insert"] = {
+    const newContentItem: Database["public"]["Tables"]["content_items"]["Insert"] = {
       brand_id: brandId,
       date_target: dateTarget,
       platform: normalizedPlatform,
@@ -62,24 +66,24 @@ export async function POST(request: NextRequest) {
       notes: sanitizedTopic,
     }
 
-    // Type workaround for Supabase insert type inference issue
-    const contentResult = await (supabase.from("content_items") as any)
-      .insert(contentInsert)
+    const contentItemsQuery = db.from("content_items") as any
+    const { data: contentItem, error: contentError } = await contentItemsQuery
+      .insert(newContentItem)
       .select()
       .single()
 
-    if (contentResult.error || !contentResult.data) {
+    if (contentError || !contentItem) {
       return NextResponse.json(
-        { error: `Failed to create content item: ${contentResult.error?.message || 'Unknown error'}` },
+        { error: `Failed to create content item: ${contentError?.message || "Unknown error"}` },
         { status: 500 }
       )
     }
 
-    const contentItem = contentResult.data as Database["public"]["Tables"]["content_items"]["Row"]
+    const contentRecord = contentItem as Database["public"]["Tables"]["content_items"]["Row"]
 
     // Store generations
     const generationInserts: Database["public"]["Tables"]["generations"]["Insert"][] = generated.prompts.map((prompt, index) => ({
-      content_item_id: contentItem.id,
+      content_item_id: contentRecord.id,
       prompt_text: prompt,
       title: index === 0 ? generated.title : `${generated.title} (v${index + 1})`,
       description: generated.description,
@@ -88,22 +92,21 @@ export async function POST(request: NextRequest) {
       model_params: { platform: normalizedPlatform, topic: sanitizedTopic },
     }))
 
-    // Type workaround for Supabase insert type inference issue
-    const genResult = await (supabase.from("generations") as any)
-      .insert(generationInserts)
+    const generationsQuery = db.from("generations") as any
+    const { error: genError } = await generationsQuery.insert(generationInserts)
 
-    if (genResult.error) {
+    if (genError) {
       // Rollback: delete the content item if generations fail
-      await supabase.from("content_items").delete().eq("id", contentItem.id)
+      await db.from("content_items").delete().eq("id", contentRecord.id)
       return NextResponse.json(
-        { error: `Failed to store generated content: ${genResult.error.message}` },
+        { error: `Failed to store generated content: ${genError.message}` },
         { status: 500 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      contentItem,
+      contentItem: contentRecord,
       generated,
       topic: sanitizedTopic,
     })
@@ -111,8 +114,8 @@ export async function POST(request: NextRequest) {
     // Log error with context for debugging
     const errorDetails = {
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      error: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
     }
     console.error("[API /generate]", JSON.stringify(errorDetails))
 

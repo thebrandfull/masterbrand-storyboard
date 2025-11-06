@@ -1,16 +1,16 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Check, ChevronRight, AlertCircle, Paperclip, X } from "lucide-react"
+import { AlertCircle, Check, ChevronLeft, ChevronRight, Paperclip, PlayCircle, X } from "lucide-react"
 import { cn, getStatusColor } from "@/lib/utils"
 import { updateContentItemStatus, updateContentItemDetails } from "@/lib/actions/content"
 import { useToast } from "@/hooks/use-toast"
+import { WORKFLOW_STAGES, StageKey, isStageKey } from "@/lib/constants/workflow"
 
 interface WorkflowStepperProps {
   contentItem: any
@@ -24,17 +24,14 @@ type Attachment = {
   addedAt?: string
 }
 
-const WORKFLOW_STAGES = [
-  { key: "idea", label: "Idea", description: "Topic selected" },
-  { key: "prompted", label: "Prompted", description: "Prompts generated" },
-  { key: "generated", label: "Generated", description: "Video created" },
-  { key: "enhanced", label: "Enhanced", description: "Edits complete" },
-  { key: "qc", label: "QC", description: "Quality checked" },
-  { key: "scheduled", label: "Scheduled", description: "Ready to publish" },
-  { key: "published", label: "Published", description: "Live on platform" },
-]
+const stageIndex = (key: StageKey) =>
+  WORKFLOW_STAGES.findIndex((stage) => stage.key === key)
 
 export function WorkflowStepper({ contentItem, generations, onUpdate }: WorkflowStepperProps) {
+  const sanitizedStatus: StageKey = isStageKey(contentItem.status)
+    ? (contentItem.status as StageKey)
+    : WORKFLOW_STAGES[0].key
+
   const [notes, setNotes] = useState(contentItem.notes || "")
   const [attachments, setAttachments] = useState<Attachment[]>(() =>
     parseAttachments(contentItem.attachments)
@@ -43,9 +40,17 @@ export function WorkflowStepper({ contentItem, generations, onUpdate }: Workflow
   const [isSavingNotes, setIsSavingNotes] = useState(false)
   const [isSavingAttachments, setIsSavingAttachments] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [activeStageKey, setActiveStageKey] = useState<StageKey>(sanitizedStatus)
+
   const { toast } = useToast()
   const notesInitialized = useRef(false)
   const attachmentsInitialized = useRef(false)
+
+  useEffect(() => {
+    if (isStageKey(contentItem.status)) {
+      setActiveStageKey(contentItem.status as StageKey)
+    }
+  }, [contentItem.status])
 
   const emitContentUpdate = useCallback(() => {
     if (typeof window === "undefined") return
@@ -118,14 +123,22 @@ export function WorkflowStepper({ contentItem, generations, onUpdate }: Workflow
     () => parseBlockerHistory(contentItem.blocker_reason),
     [contentItem.blocker_reason]
   )
-  const canEditAttachments = contentItem.status === "generated" || contentItem.status === "enhanced"
+
+  const currentStageIndex = Math.max(0, stageIndex(sanitizedStatus))
+  const activeStageIndex = Math.max(0, stageIndex(activeStageKey))
+  const currentStage = WORKFLOW_STAGES[currentStageIndex]
+  const activeStage = WORKFLOW_STAGES[activeStageIndex]
+
+  const canEditAttachments = sanitizedStatus === "generated" || sanitizedStatus === "enhanced"
+  const canAdvance = currentStageIndex < WORKFLOW_STAGES.length - 1
+  const nextStageLabel = WORKFLOW_STAGES[currentStageIndex + 1]?.label ?? "Finalized"
+  const prevStageLabel = WORKFLOW_STAGES[currentStageIndex - 1]?.label ?? "Start"
 
   const handleAddAttachment = () => {
     if (!newAttachmentUrl.trim() || !canEditAttachments) return
     const trimmed = newAttachmentUrl.trim()
 
     try {
-      // Validate URL shape before saving
       new URL(trimmed)
     } catch {
       toast({
@@ -148,272 +161,323 @@ export function WorkflowStepper({ contentItem, generations, onUpdate }: Workflow
     setAttachments((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const currentStageIndex = WORKFLOW_STAGES.findIndex(
-    (stage) => stage.key === contentItem.status
+  const attemptStatusChange = useCallback(
+    async (targetIndex: number) => {
+      if (targetIndex === currentStageIndex) return
+      if (targetIndex < 0 || targetIndex >= WORKFLOW_STAGES.length) return
+
+      setIsUpdating(true)
+      const targetStage = WORKFLOW_STAGES[targetIndex]
+      const direction = targetIndex > currentStageIndex ? "Moved to" : "Reverted to"
+
+      const result = await updateContentItemStatus(contentItem.id, targetStage.key)
+
+      if (result.success) {
+        toast({
+          title: "Status updated",
+          description: `${direction} ${targetStage.label}`,
+        })
+        emitContentUpdate()
+        onUpdate()
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to update status",
+        })
+      }
+
+      setIsUpdating(false)
+    },
+    [contentItem.id, currentStageIndex, emitContentUpdate, onUpdate, toast]
   )
 
-  const handleNextStage = async () => {
-    if (currentStageIndex >= WORKFLOW_STAGES.length - 1) return
-
-    setIsUpdating(true)
-    const nextStatus = WORKFLOW_STAGES[currentStageIndex + 1].key as "idea" | "prompted" | "generated" | "enhanced" | "qc" | "scheduled" | "published"
-
-    const result = await updateContentItemStatus(contentItem.id, nextStatus)
-
-    if (result.success) {
-      toast({
-        title: "Status updated",
-        description: `Moved to ${WORKFLOW_STAGES[currentStageIndex + 1].label}`,
-      })
-      emitContentUpdate()
-      onUpdate()
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update status",
-      })
-    }
-
-    setIsUpdating(false)
+  const handleNextStage = () => {
+    if (!canAdvance || isUpdating) return
+    attemptStatusChange(currentStageIndex + 1)
   }
 
-  const handlePreviousStage = async () => {
-    if (currentStageIndex <= 0) return
+  const handlePreviousStage = () => {
+    if (currentStageIndex === 0 || isUpdating) return
+    attemptStatusChange(currentStageIndex - 1)
+  }
 
-    setIsUpdating(true)
-    const prevStatus = WORKFLOW_STAGES[currentStageIndex - 1].key as "idea" | "prompted" | "generated" | "enhanced" | "qc" | "scheduled" | "published"
-
-    const result = await updateContentItemStatus(contentItem.id, prevStatus)
-
-    if (result.success) {
-      toast({
-        title: "Status updated",
-        description: `Moved back to ${WORKFLOW_STAGES[currentStageIndex - 1].label}`,
-      })
-      emitContentUpdate()
-      onUpdate()
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update status",
-      })
-    }
-
-    setIsUpdating(false)
+  const handleJumpToStage = () => {
+    if (isUpdating || activeStageIndex === currentStageIndex) return
+    attemptStatusChange(activeStageIndex)
   }
 
   return (
-    <div className="space-y-6">
-      {/* Progress Bar */}
-      <div className="glass rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Workflow Progress</h3>
-          <Badge className={getStatusColor(contentItem.status)}>
-            {WORKFLOW_STAGES[currentStageIndex]?.label}
-          </Badge>
-        </div>
-
-        {/* Stage Indicators */}
-        <div className="relative">
-          <div className="flex justify-between items-center">
-            {WORKFLOW_STAGES.map((stage, index) => {
-              const isComplete = index < currentStageIndex
-              const isCurrent = index === currentStageIndex
-              const isFuture = index > currentStageIndex
-
-              return (
-                <div key={stage.key} className="flex flex-col items-center flex-1">
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center mb-2 smooth z-10",
-                      isComplete && "bg-primary text-primary-foreground",
-                      isCurrent && "bg-primary/20 text-primary ring-2 ring-primary",
-                      isFuture && "glass text-white/40"
-                    )}
-                  >
-                    {isComplete ? (
-                      <Check className="h-5 w-5" />
-                    ) : (
-                      <span className="text-sm">{index + 1}</span>
-                    )}
-                  </div>
-                  <span
-                    className={cn(
-                      "text-xs text-center",
-                      isCurrent && "text-white font-semibold",
-                      !isCurrent && "text-white/60"
-                    )}
-                  >
-                    {stage.label}
-                  </span>
+    <div className="space-y-8">
+      <div className="rounded-3xl border border-white/10 bg-[#111111] text-white shadow-[0_30px_80px_rgba(0,0,0,0.65)]">
+        <div className="grid gap-10 p-6 lg:grid-cols-[minmax(260px,320px)_1fr] lg:p-10">
+          <div className="space-y-6">
+            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#1d1d1d] to-[#050505] p-5">
+              <div className="flex items-center gap-3 text-white/70 text-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff2a2a]/20 text-[#ff2a2a]">
+                  <PlayCircle className="h-5 w-5" />
                 </div>
-              )
-            })}
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pipeline</p>
+                  <p className="text-base font-medium text-white">{currentStage.label} stage in progress</p>
+                </div>
+              </div>
+              <p className="mt-4 text-sm text-white/70">
+                Preview any stage, line up notes, and fast-forward the project the moment it is ready.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {WORKFLOW_STAGES.map((stage, index) => {
+                const isComplete = index < currentStageIndex
+                const isCurrent = stage.key === sanitizedStatus
+                const isActive = stage.key === activeStageKey
+
+                return (
+                  <div key={stage.key} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <span
+                        className={cn(
+                          "flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold transition",
+                          isComplete && "bg-[#ff2a2a] text-white border-transparent",
+                          isCurrent && !isComplete && "border-[#ff2a2a] text-[#ff2a2a]",
+                          !isComplete && !isCurrent && "border-white/20 text-white/50"
+                        )}
+                      >
+                        {isComplete ? <Check className="h-4 w-4" /> : index + 1}
+                      </span>
+                      {index < WORKFLOW_STAGES.length - 1 && (
+                        <span
+                          className={cn(
+                            "mt-2 h-full w-px flex-1",
+                            isComplete ? "bg-[#ff2a2a]" : "bg-white/10"
+                          )}
+                        />
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveStageKey(stage.key)}
+                      className={cn(
+                        "flex-1 rounded-2xl border border-white/10 px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff2a2a]/60",
+                        isActive ? "bg-white/5 border-white/20 shadow-[0_10px_40px_rgba(0,0,0,0.45)]" : "hover:bg-white/5",
+                        isCurrent && "ring-1 ring-[#ff2a2a]/80"
+                      )}
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-base font-semibold text-white">{stage.label}</p>
+                        {isCurrent && (
+                          <Badge className="border-0 bg-[#ff2a2a] text-white">Live</Badge>
+                        )}
+                        {!isCurrent && isComplete && (
+                          <Badge variant="outline" className="border-white/20 text-white/70">
+                            Done
+                          </Badge>
+                        )}
+                        {!isCurrent && isActive && (
+                          <Badge className="border-0 bg-white/10 text-white/70">Preview</Badge>
+                        )}
+                      </div>
+                      <p className="mt-1 text-sm text-white/60">{stage.description}</p>
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Connecting Line */}
-          <div className="absolute top-5 left-0 right-0 h-0.5 bg-white/10 -z-0" style={{ width: '90%', marginLeft: '5%' }}>
-            <div
-              className="h-full bg-primary smooth"
-              style={{
-                width: `${(currentStageIndex / (WORKFLOW_STAGES.length - 1)) * 100}%`,
-              }}
-            />
+          <div className="space-y-6">
+            <div className="rounded-3xl border border-white/10 bg-[#181818] p-6 shadow-inner shadow-black/40">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.4em] text-white/50">Stage in focus</p>
+                  <h3 className="mt-2 text-2xl font-semibold text-white">{activeStage.label}</h3>
+                  <p className="text-sm text-white/70">{activeStage.description}</p>
+                </div>
+                <Badge className={cn("border text-xs", getStatusColor(sanitizedStatus))}>
+                  {currentStage.label}
+                </Badge>
+              </div>
+
+              {activeStageKey !== sanitizedStatus && (
+                <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        Previewing {activeStage.label}
+                      </p>
+                      <p className="text-xs text-white/60">
+                        Line up assets ahead of time and push when everything feels ready.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleJumpToStage}
+                      disabled={isUpdating}
+                      className="bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+                    >
+                      {isUpdating ? "Updating..." : `Move to ${activeStage.label}`}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-6 space-y-5">
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <Label className="flex items-center justify-between text-white/80">
+                    Notes
+                    {isSavingNotes && <span className="text-xs text-white/60">Saving...</span>}
+                  </Label>
+                  <Textarea
+                    placeholder="Add notes, links, or instructions for this stage..."
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="mt-3 min-h-[120px] border-white/10 bg-[#0c0c0c] text-white placeholder:text-white/40 focus-visible:ring-[#ff2a2a]"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <Label className="flex items-center justify-between text-white/80">
+                    Attachments
+                    {isSavingAttachments && (
+                      <span className="text-xs text-white/60">Saving...</span>
+                    )}
+                  </Label>
+                  {canEditAttachments && (
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        placeholder="https://drive.google.com/..."
+                        value={newAttachmentUrl}
+                        onChange={(e) => setNewAttachmentUrl(e.target.value)}
+                        className="border-white/10 bg-[#0f0f0f] text-white placeholder:text-white/50"
+                      />
+                      <Button
+                        type="button"
+                        onClick={handleAddAttachment}
+                        disabled={!newAttachmentUrl.trim()}
+                        className="bg-white/10 text-white hover:bg-white/20"
+                      >
+                        <Paperclip className="mr-2 h-4 w-4" />
+                        Add
+                      </Button>
+                    </div>
+                  )}
+                  {attachments.length > 0 ? (
+                    <div className="mt-4 space-y-2">
+                      {attachments.map((attachment, index) => (
+                        <div
+                          key={`${attachment.url}-${index}`}
+                          className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0c0c0c] px-4 py-3"
+                        >
+                          <div>
+                            <a
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-sm font-medium text-[#ff2a2a] underline-offset-2 hover:underline"
+                            >
+                              {getAttachmentLabel(attachment, index)}
+                            </a>
+                            {attachment.addedAt && (
+                              <p className="text-xs text-white/40">
+                                Added {formatAttachmentDate(attachment.addedAt)}
+                              </p>
+                            )}
+                          </div>
+                          {canEditAttachments && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => handleRemoveAttachment(index)}
+                              className="text-white/50 hover:text-white"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-xs text-white/50">No attachments yet.</p>
+                  )}
+                </div>
+
+                {generations && generations.length > 0 && (
+                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-white">Prompt playlist</p>
+                        <p className="text-xs text-white/60">Variations generated for this content item</p>
+                      </div>
+                      <Badge className="border-0 bg-white/10 text-white/70">
+                        {generations.length} takes
+                      </Badge>
+                    </div>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      {generations.map((gen: any, index: number) => (
+                        <div
+                          key={gen.id}
+                          className="rounded-2xl border border-white/10 bg-[#121212] p-4"
+                        >
+                          <p className="text-xs uppercase text-white/50">Variation {index + 1}</p>
+                          <p className="mt-2 text-sm text-white/80">{gen.prompt_text}</p>
+                          {gen.tags?.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {gen.tags.map((tag: string, i: number) => (
+                                <Badge key={`${gen.id}-${tag}-${i}`} variant="outline" className="border-white/20 text-white/70">
+                                  #{tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {blockerHistory.length > 0 && (
+                  <div className="rounded-2xl border border-[#ff2a2a]/30 bg-[#2b0c0e] p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-[#ff2a2a]" />
+                      <div>
+                        <p className="font-semibold text-white">Blocker history</p>
+                        <ul className="mt-2 space-y-1 text-sm text-white/70">
+                          {blockerHistory.map((entry, index) => (
+                            <li key={`${entry}-${index}`}>• {entry}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={handlePreviousStage}
+                  disabled={currentStageIndex === 0 || isUpdating}
+                  className="border-white/30 text-white/80 hover:bg-white/10"
+                >
+                  <ChevronLeft className="mr-2 h-4 w-4" />
+                  {prevStageLabel}
+                </Button>
+                <Button
+                  onClick={handleNextStage}
+                  disabled={!canAdvance || isUpdating}
+                  className="bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+                >
+                  {isUpdating ? "Updating..." : `Advance to ${nextStageLabel}`}
+                  <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* Current Stage Details */}
-      <Card className="glass">
-        <CardHeader>
-          <CardTitle>{WORKFLOW_STAGES[currentStageIndex]?.label} Stage</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-white/60">
-            {WORKFLOW_STAGES[currentStageIndex]?.description}
-          </p>
-
-          {/* Stage-specific content */}
-          {contentItem.status === "prompted" && generations && generations.length > 0 && (
-            <div className="space-y-3">
-              <Label>Generated Prompts</Label>
-              {generations.map((gen: any, index: number) => (
-                <Card key={gen.id} className="glass p-4">
-                  <h4 className="font-semibold mb-2">Variation {index + 1}</h4>
-                  <p className="text-sm text-white/80 mb-2">{gen.prompt_text}</p>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {gen.tags?.map((tag: string, i: number) => (
-                      <Badge key={i} variant="outline" className="text-xs">
-                        #{tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div>
-              <Label className="flex items-center justify-between">
-                Notes
-                {isSavingNotes && (
-                  <span className="text-xs text-white/60">Saving...</span>
-                )}
-              </Label>
-              <Textarea
-                placeholder="Add notes, links, or instructions for this stage..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="glass mt-2"
-              />
-            </div>
-
-            <div>
-              <Label className="flex items-center justify-between">
-                Attachments
-                {isSavingAttachments && (
-                  <span className="text-xs text-white/60">Saving...</span>
-                )}
-              </Label>
-              {canEditAttachments && (
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    placeholder="https://drive.google.com/..."
-                    value={newAttachmentUrl}
-                    onChange={(e) => setNewAttachmentUrl(e.target.value)}
-                    className="glass"
-                  />
-                  <Button
-                    type="button"
-                    onClick={handleAddAttachment}
-                    disabled={!newAttachmentUrl.trim()}
-                  >
-                    <Paperclip className="h-4 w-4 mr-2" />
-                    Add
-                  </Button>
-                </div>
-              )}
-              {attachments.length > 0 ? (
-                <div className="mt-3 space-y-2">
-                  {attachments.map((attachment, index) => (
-                    <div
-                      key={`${attachment.url}-${index}`}
-                      className="glass rounded-md px-3 py-2 flex items-center justify-between gap-3"
-                    >
-                      <div className="flex flex-col">
-                        <a
-                          href={attachment.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-sm text-primary underline break-all"
-                        >
-                          {getAttachmentLabel(attachment, index)}
-                        </a>
-                        {attachment.addedAt && (
-                          <span className="text-xs text-white/40">
-                            Added {formatAttachmentDate(attachment.addedAt)}
-                          </span>
-                        )}
-                      </div>
-                      {canEditAttachments && (
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleRemoveAttachment(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-white/50 mt-2">No attachments yet.</p>
-              )}
-            </div>
-          </div>
-
-          {blockerHistory.length > 0 && (
-            <div className="glass rounded-lg p-4 border-l-4 border-destructive">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-destructive mb-1">Blocker history</h4>
-                  <ul className="space-y-1 text-sm text-white/70">
-                    {blockerHistory.map((entry, index) => (
-                      <li key={`${entry}-${index}`}>• {entry}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-4">
-            <Button
-              variant="ghost"
-              onClick={handlePreviousStage}
-              disabled={currentStageIndex === 0 || isUpdating}
-            >
-              Previous Stage
-            </Button>
-            <Button
-              onClick={handleNextStage}
-              disabled={
-                currentStageIndex === WORKFLOW_STAGES.length - 1 || isUpdating
-              }
-            >
-              {isUpdating ? "Updating..." : "Next Stage"}
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

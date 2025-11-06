@@ -10,6 +10,7 @@ import { Zap, Calendar, Loader2 } from "lucide-react"
 import { getBrands } from "@/lib/actions/brands"
 import { useToast } from "@/hooks/use-toast"
 import { format, addDays } from "date-fns"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 
 export default function BulkGeneratePage() {
@@ -153,26 +154,25 @@ export default function BulkGeneratePage() {
   const selectedBrand = brands.find((b) => b.id === selectedBrandId)
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Bulk Generate</h1>
-          <p className="text-white/60">
-            Generate multiple days of content at once with topic variety
-          </p>
+    <div className="space-y-10">
+      <section className="hero-panel p-6 sm:p-10">
+        <div className="space-y-3">
+          <p className="text-xs uppercase tracking-[0.4em] text-white/50">Bulk studio</p>
+          <h1 className="text-4xl font-semibold">Generate days of content in one pass</h1>
+          <p className="text-white/70">Stack prompts, vary topics, and auto-schedule across platforms.</p>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Settings Panel */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card className="glass">
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Settings Panel */}
+        <div className="space-y-6">
+          <Card>
               <CardHeader>
                 <CardTitle>Generation Settings</CardTitle>
                 <CardDescription>Configure bulk generation parameters</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
+                <div className="space-y-2">
                   <Label>Brand</Label>
                   <BrandSelector
                     brands={brands}
@@ -181,13 +181,13 @@ export default function BulkGeneratePage() {
                   />
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label>Number of Days</Label>
                   <Select value={dateRange.toString()} onValueChange={(v) => setDateRange(Number(v))}>
-                    <SelectTrigger className="glass mt-2">
+                    <SelectTrigger className="mt-1 rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="glass">
+                    <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
                       <SelectItem value="7">7 days</SelectItem>
                       <SelectItem value="14">14 days</SelectItem>
                       <SelectItem value="21">21 days</SelectItem>
@@ -196,13 +196,13 @@ export default function BulkGeneratePage() {
                   </Select>
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label>Platform</Label>
                   <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger className="glass mt-2">
+                    <SelectTrigger className="mt-1 rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="glass">
+                    <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
                       <SelectItem value="tiktok">TikTok</SelectItem>
                       <SelectItem value="instagram">Instagram</SelectItem>
                       <SelectItem value="youtube">YouTube</SelectItem>
@@ -213,9 +213,9 @@ export default function BulkGeneratePage() {
                 {topics.length > 0 && (
                   <div>
                     <Label>Topics ({topics.length})</Label>
-                    <div className="flex flex-wrap gap-2 mt-2">
+                    <div className="mt-2 flex flex-wrap gap-2">
                       {topics.map((topic) => (
-                        <Badge key={topic.id} variant="secondary" className="glass">
+                        <Badge key={topic.id} variant="secondary" className="rounded-full border border-white/10 bg-white/5 text-white/80">
                           {topic.label} (w: {topic.weight})
                         </Badge>
                       ))}
@@ -226,7 +226,7 @@ export default function BulkGeneratePage() {
                 <Button
                   onClick={handleBulkGenerate}
                   disabled={isGenerating || !selectedBrandId || topics.length === 0}
-                  className="w-full"
+                  className="w-full rounded-full bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
                   size="lg"
                 >
                   {isGenerating ? (
@@ -244,8 +244,8 @@ export default function BulkGeneratePage() {
               </CardContent>
             </Card>
 
-            {selectedBrand && (
-              <Card className="glass">
+          {selectedBrand && (
+            <Card>
                 <CardHeader>
                   <CardTitle className="text-sm">Brand Info</CardTitle>
                 </CardHeader>
@@ -255,11 +255,11 @@ export default function BulkGeneratePage() {
                 </CardContent>
               </Card>
             )}
-          </div>
+        </div>
 
-          {/* Results Panel */}
-          <div className="lg:col-span-2">
-            <Card className="glass">
+        {/* Results Panel */}
+        <div className="lg:col-span-2">
+          <Card>
               <CardHeader>
                 <CardTitle>Generation Progress</CardTitle>
                 <CardDescription>
@@ -269,57 +269,57 @@ export default function BulkGeneratePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {generatedItems.length === 0 && !isGenerating ? (
-                  <div className="text-center py-16">
-                    <div className="rounded-full bg-primary/20 p-6 w-fit mx-auto mb-4">
-                      <Calendar className="h-12 w-12 text-primary" />
-                    </div>
-                    <p className="text-white/60">
-                      Click "Generate" to start creating content for the next {dateRange} days
-                    </p>
+              {generatedItems.length === 0 && !isGenerating ? (
+                <div className="py-16 text-center">
+                  <div className="mx-auto mb-4 w-fit rounded-2xl border border-white/10 bg-white/5 p-6">
+                    <Calendar className="h-12 w-12 text-[#ff2a2a]" />
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {generatedItems.map((item, index) => (
-                      <Card key={index} className="glass p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-semibold">{item.date}</div>
-                            <div className="text-sm text-white/60">
-                              {item.topic} • {item.platform}
-                            </div>
-                            {item.error && (
-                              <div className="text-xs text-destructive mt-1">{item.error}</div>
-                            )}
+                  <p className="text-white/60">
+                    Click &quot;Generate&quot; to start creating content for the next {dateRange} days
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {generatedItems.map((item, index) => (
+                    <Card key={index} className="border-white/10 bg-[#0f0f0f]/80 p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-semibold text-white">{item.date}</div>
+                          <div className="text-sm text-white/60">
+                            {item.topic} • {item.platform}
                           </div>
-                          <Badge
-                            className={
-                              item.status === "success"
-                                ? "bg-green-500/20 text-green-300"
-                                : item.status === "failed"
-                                ? "bg-red-500/20 text-red-300"
-                                : "bg-yellow-500/20 text-yellow-300"
-                            }
-                          >
-                            {item.status}
-                          </Badge>
+                          {item.error && (
+                            <div className="text-xs text-destructive mt-1">{item.error}</div>
+                          )}
                         </div>
-                      </Card>
-                    ))}
+                        <Badge
+                          className={cn(
+                            "rounded-full px-3 py-1 text-xs",
+                            item.status === "success"
+                              ? "bg-green-500/20 text-green-300"
+                              : item.status === "failed"
+                              ? "bg-red-500/20 text-red-300"
+                              : "bg-yellow-500/20 text-yellow-300"
+                          )}
+                        >
+                          {item.status}
+                        </Badge>
+                      </div>
+                    </Card>
+                  ))}
 
-                    {isGenerating && (
-                      <Card className="glass p-4 border-dashed border-2 border-primary/30">
-                        <div className="flex items-center gap-3">
-                          <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                          <span className="text-sm text-white/60">Generating next item...</span>
-                        </div>
-                      </Card>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  {isGenerating && (
+                    <Card className="border-dashed border-2 border-[#ff2a2a]/40 bg-transparent p-4">
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="h-5 w-5 animate-spin text-[#ff2a2a]" />
+                        <span className="text-sm text-white/70">Generating next item...</span>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

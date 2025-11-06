@@ -133,7 +133,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
   }
 
   return (
-    <Card className="glass p-6 space-y-6">
+    <Card className="space-y-6 p-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="space-y-2">
@@ -149,7 +149,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
           </div>
 
           {selectedBrand && (
-            <div className="glass rounded-lg border border-white/10 p-4 space-y-2">
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 space-y-2">
               <p className="text-xs uppercase tracking-wide text-white/40">Brand snapshot</p>
               {selectedBrand.mission && (
                 <p className="text-sm text-white/80 leading-snug">{selectedBrand.mission}</p>
@@ -166,10 +166,10 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
           <div className="space-y-2">
             <Label>Platform</Label>
             <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger className="glass">
+              <SelectTrigger className="rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="glass">
+              <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
                 {platformOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -181,14 +181,19 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
 
           <div className="space-y-2">
             <Label>Target date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="glass" />
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="rounded-2xl border border-white/10 bg-[#0f0f0f] text-white"
+            />
           </div>
         </div>
 
         <div className="space-y-2">
           <Label>Topic / hook / desired outcome</Label>
           <Textarea
-            className="glass h-full"
+            className="h-full rounded-2xl border border-white/10 bg-[#0f0f0f] text-white placeholder:text-white/50"
             placeholder="Example: 3 myths about scaling brand studios, ending with a CTA to book a workshop."
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
@@ -204,7 +209,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
                     key={topicOption.id}
                     type="button"
                     onClick={() => setTopic(topicOption.label)}
-                    className="glass px-3 py-1 rounded-full text-xs border border-white/10 hover:border-primary/60"
+                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 hover:border-[#ff2a2a]/60"
                   >
                     {topicOption.label}
                     {typeof topicOption.weight === "number" && (
@@ -221,13 +226,17 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex justify-end">
-        <Button onClick={handleGenerate} disabled={loading || !brandId}>
+        <Button
+          onClick={handleGenerate}
+          disabled={loading || !brandId}
+          className="rounded-full bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+        >
           {loading ? "Generating..." : "Generate content"}
         </Button>
       </div>
 
       {result && (
-        <Card className="glass p-5 border border-primary/30 space-y-4">
+        <Card className="space-y-4 border border-[#ff2a2a]/40 bg-[#0f0f0f]/80 p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs uppercase tracking-wide text-white/40">Content item</p>
@@ -244,7 +253,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
             <p className="text-xs uppercase tracking-wide text-white/40 mb-2">Prompts</p>
             <div className="space-y-2">
               {result.prompts.map((prompt, index) => (
-                <Card key={`${prompt}-${index}`} className="glass p-3 text-sm">
+                <Card key={`${prompt}-${index}`} className="border-white/10 bg-[#0b0b0b]/80 p-3 text-sm">
                   <p className="font-medium">Variation {index + 1}</p>
                   <p className="text-white/70 whitespace-pre-wrap">{prompt}</p>
                 </Card>

@@ -34,7 +34,7 @@ export default function BrandChat({ brands }: BrandChatProps) {
 
   if (!brands?.length) {
     return (
-      <Card className="glass p-6">
+      <Card className="p-6">
         <p className="text-sm text-white/70">
           Add a brand first—once it exists, the Brand Brain can spin up strategy notes instantly.
         </p>
@@ -96,7 +96,7 @@ export default function BrandChat({ brands }: BrandChatProps) {
   }
 
   return (
-    <Card className="glass p-6">
+    <Card className="p-6">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <BrandSelector
@@ -114,7 +114,7 @@ export default function BrandChat({ brands }: BrandChatProps) {
           </div>
         </div>
 
-        <div className="glass rounded-xl p-4 h-[420px] overflow-y-auto space-y-3">
+        <div className="h-[420px] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-4">
           {messages.length === 0 && (
             <p className="text-sm text-white/50">Ask your brand about strategy, prompts, or guardrails.</p>
           )}
@@ -136,7 +136,7 @@ export default function BrandChat({ brands }: BrandChatProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="glass"
+            className="rounded-2xl border border-white/10 bg-[#0f0f0f] text-white placeholder:text-white/50"
             rows={3}
           />
           <div className="flex justify-end">
@@ -153,7 +153,7 @@ export default function BrandChat({ brands }: BrandChatProps) {
         </div>
 
         {references.length > 0 && (
-          <div className="glass rounded-xl p-4 border border-white/10 space-y-3">
+          <div className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-4">
             <div className="flex items-center justify-between text-xs uppercase tracking-wide text-white/40">
               <span>Referenced memory</span>
               <span>{references.length} snippet{references.length === 1 ? "" : "s"}</span>

@@ -25,17 +25,18 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-screen w-64 flex-col fixed left-0 top-0 glass border-r border-white/10">
-      {/* Logo/Brand */}
-      <div className="flex h-16 items-center gap-3 px-6 border-b border-white/10">
-        <div className="rounded-lg bg-primary/20 p-2">
-          <Sparkles className="h-5 w-5 text-primary" />
+    <aside className="fixed left-0 top-0 z-20 flex h-screen w-64 flex-col border-r border-white/5 bg-[#050505]/95 px-4 pb-6 pt-6 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-2xl">
+      <div className="mb-8 flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff2a2a]/20 text-[#ff2a2a]">
+          <Sparkles className="h-5 w-5" />
         </div>
-        <span className="text-xl font-bold">Storyboard</span>
+        <div>
+          <p className="text-xs uppercase tracking-[0.4em] text-white/50">Studio</p>
+          <p className="text-lg font-semibold text-white">Storyboard</p>
+        </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -43,25 +44,28 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium smooth",
+                "group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-white/65 transition",
                 isActive
-                  ? "bg-primary/20 text-primary"
-                  : "text-white/60 hover:bg-white/5 hover:text-white"
+                  ? "border border-white/10 bg-white/10 text-white shadow-[0_10px_40px_rgba(0,0,0,0.55)]"
+                  : "hover:bg-white/5 hover:text-white"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              {item.name}
+              <item.icon
+                className={cn(
+                  "h-4 w-4 transition duration-200",
+                  isActive ? "text-[#ff2a2a]" : "text-white/50 group-hover:text-[#ff2a2a]"
+                )}
+              />
+              <span className="flex-1">{item.name}</span>
             </Link>
           )
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="border-t border-white/10 p-4">
-        <p className="text-xs text-white/40">
-          Made for content creators
-        </p>
+      <div className="mt-6 rounded-2xl border border-white/5 bg-white/5 p-4 text-xs text-white/60">
+        <p className="font-semibold text-white/80">Creator OS</p>
+        <p className="text-white/50">Designed for daily publishing rituals.</p>
       </div>
-    </div>
+    </aside>
   )
 }
