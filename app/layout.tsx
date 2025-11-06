@@ -26,7 +26,7 @@ export default function RootLayout({
         <div className="relative flex min-h-screen w-full">
           <Sidebar />
           <main className="relative ml-64 flex-1 px-4 py-8 sm:px-8 lg:px-10">
-            {children}
+            <div className="mx-auto w-full max-w-6xl space-y-10">{children}</div>
           </main>
         </div>
         <Toaster />

@@ -9,9 +9,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Zap, Calendar, Loader2 } from "lucide-react"
 import { getBrands } from "@/lib/actions/brands"
 import { useToast } from "@/hooks/use-toast"
-import { format, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+
+type GenerationSummary = {
+  requested: number
+  successes: number
+  failures: number
+}
+
+type GeneratedItem = {
+  date: string
+  topic: string
+  platform: string
+  status: "success" | "failed"
+  error?: string
+}
 
 export default function BulkGeneratePage() {
   const [brands, setBrands] = useState<any[]>([])
@@ -20,7 +33,8 @@ export default function BulkGeneratePage() {
   const [dateRange, setDateRange] = useState(7)
   const [platform, setPlatform] = useState("tiktok")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [generatedItems, setGeneratedItems] = useState<any[]>([])
+  const [generatedItems, setGeneratedItems] = useState<GeneratedItem[]>([])
+  const [summary, setSummary] = useState<GenerationSummary | null>(null)
   const { toast } = useToast()
   const notifyContentUpdate = useCallback((brandId: string) => {
     if (typeof window === "undefined" || !brandId) return
@@ -73,59 +87,50 @@ export default function BulkGeneratePage() {
 
     setIsGenerating(true)
     setGeneratedItems([])
+    setSummary(null)
 
     try {
-      const startDate = new Date()
-      const items = []
+      const response = await fetch("/api/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandId: selectedBrandId,
+          days: dateRange,
+          platform,
+        }),
+      })
 
-      for (let i = 0; i < dateRange; i++) {
-        const targetDate = addDays(startDate, i)
+      const data = await response.json()
 
-        // Select a weighted random topic
-        const topic = selectTopicByWeight(topics)
-
-        // Call generation API
-        const response = await fetch("/api/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            brandId: selectedBrandId,
-            topic: topic.label,
-            platform,
-            dateTarget: format(targetDate, "yyyy-MM-dd"),
-          }),
-        })
-
-        const result = await response.json()
-
-        if (result.success) {
-          items.push({
-            date: format(targetDate, "MMM d"),
-            topic: topic.label,
-            platform,
-            status: "success",
-          })
-          notifyContentUpdate(selectedBrandId)
-        } else {
-          items.push({
-            date: format(targetDate, "MMM d"),
-            topic: topic.label,
-            platform,
-            status: "failed",
-            error: result.error,
-          })
-        }
-
-        setGeneratedItems([...items])
-
-        // Small delay to avoid rate limiting
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Bulk generation failed")
       }
 
-      toast({
-        title: "Bulk generation complete!",
-        description: `Generated ${items.filter(i => i.status === "success").length} out of ${dateRange} items`,
-      })
+      const normalizedItems: GeneratedItem[] = (data.results || []).map((item: GeneratedItem) => ({
+        ...item,
+        date: new Date(item.date).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+        }),
+      }))
+
+      setGeneratedItems(normalizedItems)
+      setSummary(data.summary || null)
+      const successes = data.summary?.successes ?? 0
+
+      if (successes > 0) {
+        notifyContentUpdate(selectedBrandId)
+        toast({
+          title: "Bulk generation complete!",
+          description: `Generated ${successes} out of ${data.summary?.requested ?? dateRange} items`,
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "No content generated",
+          description: "Every attempt failed. Check your API keys and brand configuration.",
+        })
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -135,20 +140,6 @@ export default function BulkGeneratePage() {
     } finally {
       setIsGenerating(false)
     }
-  }
-
-  const selectTopicByWeight = (topics: any[]) => {
-    const totalWeight = topics.reduce((sum, t) => sum + t.weight, 0)
-    let random = Math.random() * totalWeight
-
-    for (const topic of topics) {
-      random -= topic.weight
-      if (random <= 0) {
-        return topic
-      }
-    }
-
-    return topics[0]
   }
 
   const selectedBrand = brands.find((b) => b.id === selectedBrandId)
@@ -184,10 +175,10 @@ export default function BulkGeneratePage() {
                 <div className="space-y-2">
                   <Label>Number of Days</Label>
                   <Select value={dateRange.toString()} onValueChange={(v) => setDateRange(Number(v))}>
-                    <SelectTrigger className="mt-1 rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
+                    <SelectTrigger className="mt-1 rounded-lg border border-white/10 bg-[#0f0f0f] text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
+                    <SelectContent className="rounded-lg border border-white/10 bg-[#111111] text-white">
                       <SelectItem value="7">7 days</SelectItem>
                       <SelectItem value="14">14 days</SelectItem>
                       <SelectItem value="21">21 days</SelectItem>
@@ -199,10 +190,10 @@ export default function BulkGeneratePage() {
                 <div className="space-y-2">
                   <Label>Platform</Label>
                   <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger className="mt-1 rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
+                    <SelectTrigger className="mt-1 rounded-lg border border-white/10 bg-[#0f0f0f] text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
+                    <SelectContent className="rounded-lg border border-white/10 bg-[#111111] text-white">
                       <SelectItem value="tiktok">TikTok</SelectItem>
                       <SelectItem value="instagram">Instagram</SelectItem>
                       <SelectItem value="youtube">YouTube</SelectItem>
@@ -215,7 +206,11 @@ export default function BulkGeneratePage() {
                     <Label>Topics ({topics.length})</Label>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {topics.map((topic) => (
-                        <Badge key={topic.id} variant="secondary" className="rounded-full border border-white/10 bg-white/5 text-white/80">
+                        <Badge
+                          key={topic.id}
+                          variant="secondary"
+                          className="rounded-lg border border-white/10 bg-white/5 text-white/80"
+                        >
                           {topic.label} (w: {topic.weight})
                         </Badge>
                       ))}
@@ -226,7 +221,7 @@ export default function BulkGeneratePage() {
                 <Button
                   onClick={handleBulkGenerate}
                   disabled={isGenerating || !selectedBrandId || topics.length === 0}
-                  className="w-full rounded-full bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+                  className="w-full rounded-lg bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
                   size="lg"
                 >
                   {isGenerating ? (
@@ -263,63 +258,85 @@ export default function BulkGeneratePage() {
               <CardHeader>
                 <CardTitle>Generation Progress</CardTitle>
                 <CardDescription>
-                  {generatedItems.length > 0
-                    ? `${generatedItems.length} / ${dateRange} items processed`
+                  {isGenerating
+                    ? `Processing ${dateRange} days`
+                    : generatedItems.length > 0
+                    ? `${generatedItems.length} items processed`
                     : "Ready to generate"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-              {generatedItems.length === 0 && !isGenerating ? (
-                <div className="py-16 text-center">
-                  <div className="mx-auto mb-4 w-fit rounded-2xl border border-white/10 bg-white/5 p-6">
-                    <Calendar className="h-12 w-12 text-[#ff2a2a]" />
+                {generatedItems.length === 0 && !isGenerating ? (
+                  <div className="py-16 text-center">
+                    <div className="mx-auto mb-4 w-fit rounded-lg border border-white/10 bg-white/5 p-6">
+                      <Calendar className="h-12 w-12 text-[#ff2a2a]" />
+                    </div>
+                    <p className="text-white/60">
+                      Click &quot;Generate&quot; to start creating content for the next {dateRange} days
+                    </p>
                   </div>
-                  <p className="text-white/60">
-                    Click &quot;Generate&quot; to start creating content for the next {dateRange} days
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {generatedItems.map((item, index) => (
-                    <Card key={index} className="border-white/10 bg-[#0f0f0f]/80 p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-semibold text-white">{item.date}</div>
-                          <div className="text-sm text-white/60">
-                            {item.topic} • {item.platform}
+                ) : (
+                  <div className="space-y-3">
+                    {summary && (
+                      <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-white/80">
+                        <div className="font-semibold text-white">Summary</div>
+                        <div className="mt-1 grid grid-cols-3 gap-2 text-xs text-white/60">
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-center">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">Requested</p>
+                            <p className="mt-2 text-lg font-semibold text-white">{summary.requested}</p>
                           </div>
-                          {item.error && (
-                            <div className="text-xs text-destructive mt-1">{item.error}</div>
-                          )}
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-center">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">Success</p>
+                            <p className="mt-2 text-lg font-semibold text-green-300">{summary.successes}</p>
+                          </div>
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-3 text-center">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-white/40">Failed</p>
+                            <p className="mt-2 text-lg font-semibold text-red-300">{summary.failures}</p>
+                          </div>
                         </div>
-                        <Badge
-                          className={cn(
-                            "rounded-full px-3 py-1 text-xs",
-                            item.status === "success"
-                              ? "bg-green-500/20 text-green-300"
-                              : item.status === "failed"
-                              ? "bg-red-500/20 text-red-300"
-                              : "bg-yellow-500/20 text-yellow-300"
-                          )}
-                        >
-                          {item.status}
-                        </Badge>
                       </div>
-                    </Card>
-                  ))}
+                    )}
 
-                  {isGenerating && (
-                    <Card className="border-dashed border-2 border-[#ff2a2a]/40 bg-transparent p-4">
-                      <div className="flex items-center gap-3">
-                        <Loader2 className="h-5 w-5 animate-spin text-[#ff2a2a]" />
-                        <span className="text-sm text-white/70">Generating next item...</span>
-                      </div>
-                    </Card>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    {generatedItems.map((item, index) => (
+                      <Card key={index} className="border-white/10 bg-[#0f0f0f]/80 p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold text-white">{item.date}</div>
+                            <div className="text-sm text-white/60">
+                              {item.topic} • {item.platform}
+                            </div>
+                            {item.error && (
+                              <div className="text-xs text-destructive mt-1">{item.error}</div>
+                            )}
+                          </div>
+                          <Badge
+                            className={cn(
+                              "rounded-lg px-3 py-1 text-xs",
+                              item.status === "success"
+                                ? "bg-green-500/20 text-green-300"
+                                : item.status === "failed"
+                                ? "bg-red-500/20 text-red-300"
+                                : "bg-yellow-500/20 text-yellow-300"
+                            )}
+                          >
+                            {item.status}
+                          </Badge>
+                        </div>
+                      </Card>
+                    ))}
+
+                    {isGenerating && (
+                      <Card className="border-dashed border-2 border-[#ff2a2a]/40 bg-transparent p-4">
+                        <div className="flex items-center gap-3">
+                          <Loader2 className="h-5 w-5 animate-spin text-[#ff2a2a]" />
+                          <span className="text-sm text-white/70">Generating bulk content...</span>
+                        </div>
+                      </Card>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
         </div>
       </div>
     </div>
