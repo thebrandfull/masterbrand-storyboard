@@ -10,6 +10,9 @@ import {
   Zap,
   Sparkles,
   PenSquare,
+  Wand2,
+  Captions,
+  Clapperboard,
 } from "lucide-react"
 
 const navigation = [
@@ -19,24 +22,27 @@ const navigation = [
   { name: "Brands", href: "/brands", icon: Layers },
   { name: "Brand Brain", href: "/brain", icon: Sparkles },
   { name: "Bulk Generate", href: "/bulk", icon: Zap },
+  { name: "Watermark Remover", href: "/watermark", icon: Wand2 },
+  { name: "Captioner", href: "/captioner", icon: Captions },
+  { name: "YouTube Refiner", href: "/refiner", icon: Clapperboard },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-0 top-0 z-20 flex h-screen w-64 flex-col border-r border-white/5 bg-[#050505]/95 px-4 pb-6 pt-6 shadow-[0_20px_60px_rgba(0,0,0,0.75)] backdrop-blur-2xl">
-      <div className="mb-8 flex items-center gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff2a2a]/20 text-[#ff2a2a]">
-          <Sparkles className="h-5 w-5" />
+    <aside className="sticky top-0 hidden h-screen w-56 shrink-0 flex-col gap-6 px-4 py-8 md:flex">
+      <div className="glass flex items-center gap-3 px-4 py-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[color:var(--accent)]/20 text-[color:var(--accent)]">
+          <Sparkles className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-white/50">Studio</p>
-          <p className="text-lg font-semibold text-white">Storyboard</p>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-[color:var(--muted)]">Studio</p>
+          <p className="text-base font-semibold text-[color:var(--text)]">Storyboard</p>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
+      <nav className="glass flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -44,16 +50,16 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-white/65 transition",
-                isActive
-                  ? "border border-white/10 bg-white/10 text-white shadow-[0_10px_40px_rgba(0,0,0,0.55)]"
-                  : "hover:bg-white/5 hover:text-white"
+                "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-[color:var(--muted)] transition",
+                isActive ? "bg-white/10 text-[color:var(--text)]" : "hover:bg-white/10 hover:text-[color:var(--text)]"
               )}
             >
               <item.icon
                 className={cn(
                   "h-4 w-4 transition duration-200",
-                  isActive ? "text-[#ff2a2a]" : "text-white/50 group-hover:text-[#ff2a2a]"
+                  isActive
+                    ? "text-[color:var(--accent)]"
+                    : "text-[color:var(--muted)] group-hover:text-[color:var(--accent)]"
                 )}
               />
               <span className="flex-1">{item.name}</span>
@@ -62,9 +68,9 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="mt-6 rounded-2xl border border-white/5 bg-white/5 p-4 text-xs text-white/60">
-        <p className="font-semibold text-white/80">Creator OS</p>
-        <p className="text-white/50">Designed for daily publishing rituals.</p>
+      <div className="glass px-4 py-4 text-xs text-[color:var(--muted)]">
+        <p className="font-semibold text-[color:var(--text)]/90">Creator OS</p>
+        <p>Designed for daily publishing rituals.</p>
       </div>
     </aside>
   )

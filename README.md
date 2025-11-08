@@ -7,6 +7,8 @@ A comprehensive social media content management system for managing multiple bra
 - **8-Step Brand Onboarding** - Comprehensive brand setup including mission, audience, visual lexicon, content rules, and topic decks
 - **Multi-Brand Management** - Manage unlimited brands from a single dashboard
 - **AI Prompt Generation** - DeepSeek-powered content generation for video prompts, titles, descriptions, and tags
+- **Caption Designer** - ElevenLabs-powered voiceover with editable, stylized captions that sync to uploaded videos
+- **YouTube Refiner** - Pulls transcripts from any video, diagnoses gaps, and rebuilds the concept automatically
 - **Monthly Calendar View** - Visual content planning and scheduling across brands
 - **Guided Workflow Stepper** - 6-stage content production pipeline (Idea → Prompted → Generated → Enhanced → QC → Scheduled → Published)
 - **Bulk Generation** - Generate content for 7-30 days at once with weighted topic variety
@@ -54,16 +56,20 @@ This will create all necessary tables:
 
 ### 3. Configure Environment Variables
 
-The \`.env.local\` file is already configured with your credentials. Verify these values:
+Duplicate `.env.example` as `.env.local` and populate it with your project credentials:
 
-\`\`\`env
-ELEVENLABS_API_KEY=your_key
-KEIAI_API_KEY=your_key
-DEEPSEEK_API_KEY=your_key
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-\`\`\`
+```bash
+cp .env.example .env.local
+```
+
+| Key | Description |
+| --- | --- |
+| `ELEVENLABS_API_KEY` | ElevenLabs API key for voice generation and timestamp metadata |
+| `DEEPSEEK_API_KEY` | DeepSeek API key for content generation |
+| `KEIAI_API_KEY` | KIE.ai API key for video automation |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key for client-side access |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key for server-side actions |
 
 ### 4. Run Development Server
 
@@ -81,6 +87,14 @@ npm run start
 \`\`\`
 
 ## Usage Guide
+
+### Caption Designer
+
+1. Navigate to **Captioner** from the sidebar.
+2. Upload a video asset (optional) or use the included sample clip.
+3. Paste or upload a script, choose an ElevenLabs voice, and press **Generate voice & captions** to create the narration and timing map.
+4. Adjust word timings in the timeline editor, tweak styling (font, colors, animations, motion), and use offset controls for fine sync.
+5. Export the session as JSON or copy the configuration to reuse across projects.
 
 ### Creating Your First Brand
 

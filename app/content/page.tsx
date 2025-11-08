@@ -45,12 +45,12 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6 text-center">
         <Card className="w-full max-w-xl space-y-4 p-10">
-          <p className="text-xs uppercase tracking-[0.4em] text-white/50">Content hub</p>
-          <h1 className="text-3xl font-semibold">Add a brand to start shipping</h1>
-          <p className="text-white/70">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Content hub</p>
+          <h1 className="text-2xl font-semibold text-[color:var(--text)]">Add a brand to start shipping</h1>
+          <p className="text-sm text-[color:var(--muted)]">
             Once a brand exists, every piece of content will flow through this pipeline—from idea to publish.
           </p>
-          <Button asChild className="rounded-full bg-[#ff2a2a] hover:bg-[#ff2a2a]/90">
+          <Button asChild className="bg-[color:var(--accent)] hover:bg-[color:var(--accent)]/90">
             <Link href="/brands">Create a brand</Link>
           </Button>
         </Card>
@@ -66,20 +66,20 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
   }))
 
   return (
-    <div className="space-y-10">
-      <section className="hero-panel p-6 sm:p-10">
+    <div className="space-y-8">
+      <section className="glass p-6 sm:p-8">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-white/50">Content hub</p>
-            <h1 className="text-4xl font-semibold">Every piece, every stage</h1>
-            <p className="mt-2 text-white/70">
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Content hub</p>
+            <h1 className="text-3xl font-semibold text-[color:var(--text)]">Every piece, every stage</h1>
+            <p className="text-sm text-[color:var(--muted)]">
               Track content for {brandList.find((brand) => brand.id === activeBrandId)?.name || "your brand"} from idea
               to publish.
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <ContentBrandFilter brands={brandList} activeBrandId={activeBrandId} />
-            <Button asChild className="rounded-full bg-[#ff2a2a] hover:bg-[#ff2a2a]/90">
+            <Button asChild className="bg-[color:var(--accent)] hover:bg-[color:var(--accent)]/90">
               <Link href="/content/new">
                 <Plus className="mr-2 h-4 w-4" />
                 New content
@@ -90,9 +90,9 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {statusSummary.map((stage) => (
-            <div key={stage.key} className="rounded-2xl border border-white/10 bg-black/30 px-4 py-5">
-              <p className="text-xs uppercase tracking-[0.4em] text-white/40">{stage.label}</p>
-              <p className="mt-2 text-3xl font-semibold">{stage.total}</p>
+            <div key={stage.key} className="glass px-4 py-4">
+              <p className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">{stage.label}</p>
+              <p className="mt-2 text-2xl font-semibold text-[color:var(--text)]">{stage.total}</p>
             </div>
           ))}
         </div>
@@ -101,13 +101,13 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
       <Card className="p-6 sm:p-8">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-semibold text-white">Upcoming content</h2>
-            <p className="text-sm text-white/60">
+            <h2 className="text-2xl font-semibold text-[color:var(--text)]">Upcoming content</h2>
+            <p className="text-sm text-[color:var(--muted)]">
               Showing the next {items.length} items for{" "}
               {brandList.find((brand) => brand.id === activeBrandId)?.name || "selected brand"}.
             </p>
           </div>
-          <Button variant="ghost" asChild className="rounded-full border border-white/10 text-white hover:bg-white/5">
+          <Button variant="ghost" asChild className="border border-white/10 text-[color:var(--text)] hover:bg-white/10">
             <Link href={`/calendar?brand=${activeBrandId}`}>
               Calendar sync
               <ArrowUpRight className="ml-2 h-4 w-4" />
@@ -116,7 +116,7 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
         </div>
 
         {items.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-dashed border-white/15 p-10 text-center text-white/60">
+          <div className="mt-8 rounded-lg border border-dashed border-white/15 p-10 text-center text-[color:var(--muted)]">
             No content yet for this brand. Generate your first piece.
           </div>
         ) : (
@@ -124,12 +124,12 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
             {items.map((item) => (
               <div
                 key={item.id}
-                className="flex flex-col gap-4 rounded-3xl border border-white/5 bg-black/20 px-5 py-4 md:flex-row md:items-center md:justify-between"
+                className="flex flex-col gap-4 rounded-lg border border-white/10 bg-white/5 px-5 py-4 md:flex-row md:items-center md:justify-between"
               >
                 <div>
-                  <p className="text-xs uppercase tracking-[0.4em] text-white/40">{formatDate(item.date_target)}</p>
-                  <h3 className="mt-2 text-lg font-semibold text-white">{deriveTopic(item)}</h3>
-                  <p className="text-sm text-white/60">
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">{formatDate(item.date_target)}</p>
+                  <h3 className="mt-2 text-lg font-semibold text-[color:var(--text)]">{deriveTopic(item)}</h3>
+                  <p className="text-sm text-[color:var(--muted)]">
                     {item.brands?.name || "Unknown brand"} • {item.platform}
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export default async function ContentPage({ searchParams }: ContentPageProps) {
                   <Badge variant="outline" className={cn("capitalize", getStatusColor(item.status))}>
                     {item.status}
                   </Badge>
-                  <Button variant="secondary" asChild size="sm" className="rounded-full border border-white/10">
+                  <Button variant="secondary" asChild size="sm" className="border border-white/10">
                     <Link href={`/content/${item.id}`}>Open</Link>
                   </Button>
                 </div>

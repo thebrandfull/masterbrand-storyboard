@@ -208,272 +208,270 @@ export function WorkflowStepper({ contentItem, generations, onUpdate }: Workflow
   }
 
   return (
-    <div className="space-y-8">
-      <div className="rounded-3xl border border-white/10 bg-[#111111] text-white shadow-[0_30px_80px_rgba(0,0,0,0.65)]">
-        <div className="grid gap-10 p-6 lg:grid-cols-[minmax(260px,320px)_1fr] lg:p-10">
-          <div className="space-y-6">
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#1d1d1d] to-[#050505] p-5">
-              <div className="flex items-center gap-3 text-white/70 text-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff2a2a]/20 text-[#ff2a2a]">
-                  <PlayCircle className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-white/50">Pipeline</p>
-                  <p className="text-base font-medium text-white">{currentStage.label} stage in progress</p>
-                </div>
+    <div className="glass p-6 sm:p-8">
+      <div className="grid gap-8 lg:grid-cols-[minmax(260px,320px)_1fr]">
+        <div className="space-y-6">
+          <div className="glass p-5">
+            <div className="flex items-center gap-3 text-sm text-[color:var(--muted)]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[color:var(--accent)]/15 text-[color:var(--accent)]">
+                <PlayCircle className="h-5 w-5" />
               </div>
-              <p className="mt-4 text-sm text-white/70">
-                Preview any stage, line up notes, and fast-forward the project the moment it is ready.
-              </p>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.3em]">Pipeline</p>
+                <p className="text-base font-medium text-[color:var(--text)]">{currentStage.label} stage in progress</p>
+              </div>
             </div>
-
-            <div className="space-y-4">
-              {WORKFLOW_STAGES.map((stage, index) => {
-                const isComplete = index < currentStageIndex
-                const isCurrent = stage.key === sanitizedStatus
-                const isActive = stage.key === activeStageKey
-
-                return (
-                  <div key={stage.key} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <span
-                        className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-full border text-sm font-semibold transition",
-                          isComplete && "bg-[#ff2a2a] text-white border-transparent",
-                          isCurrent && !isComplete && "border-[#ff2a2a] text-[#ff2a2a]",
-                          !isComplete && !isCurrent && "border-white/20 text-white/50"
-                        )}
-                      >
-                        {isComplete ? <Check className="h-4 w-4" /> : index + 1}
-                      </span>
-                      {index < WORKFLOW_STAGES.length - 1 && (
-                        <span
-                          className={cn(
-                            "mt-2 h-full w-px flex-1",
-                            isComplete ? "bg-[#ff2a2a]" : "bg-white/10"
-                          )}
-                        />
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveStageKey(stage.key)}
-                      className={cn(
-                        "flex-1 rounded-2xl border border-white/10 px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff2a2a]/60",
-                        isActive ? "bg-white/5 border-white/20 shadow-[0_10px_40px_rgba(0,0,0,0.45)]" : "hover:bg-white/5",
-                        isCurrent && "ring-1 ring-[#ff2a2a]/80"
-                      )}
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-base font-semibold text-white">{stage.label}</p>
-                        {isCurrent && (
-                          <Badge className="border-0 bg-[#ff2a2a] text-white">Live</Badge>
-                        )}
-                        {!isCurrent && isComplete && (
-                          <Badge variant="outline" className="border-white/20 text-white/70">
-                            Done
-                          </Badge>
-                        )}
-                        {!isCurrent && isActive && (
-                          <Badge className="border-0 bg-white/10 text-white/70">Preview</Badge>
-                        )}
-                      </div>
-                      <p className="mt-1 text-sm text-white/60">{stage.description}</p>
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
+            <p className="mt-4 text-sm text-[color:var(--muted)]">
+              Preview any stage, line up notes, and fast-forward the project the moment it is ready.
+            </p>
           </div>
 
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-white/10 bg-[#181818] p-6 shadow-inner shadow-black/40">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.4em] text-white/50">Stage in focus</p>
-                  <h3 className="mt-2 text-2xl font-semibold text-white">{activeStage.label}</h3>
-                  <p className="text-sm text-white/70">{activeStage.description}</p>
+          <div className="space-y-4">
+            {WORKFLOW_STAGES.map((stage, index) => {
+              const isComplete = index < currentStageIndex
+              const isCurrent = stage.key === sanitizedStatus
+              const isActive = stage.key === activeStageKey
+
+              return (
+                <div key={stage.key} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <span
+                      className={cn(
+                        "flex h-8 w-8 items-center justify-center rounded-lg border border-white/15 text-sm font-semibold transition",
+                        isComplete && "bg-[color:var(--accent)] text-white border-transparent",
+                        isCurrent && !isComplete && "border-[color:var(--accent)] text-[color:var(--accent)]",
+                        !isComplete && !isCurrent && "text-[color:var(--muted)]"
+                      )}
+                    >
+                      {isComplete ? <Check className="h-4 w-4" /> : index + 1}
+                    </span>
+                    {index < WORKFLOW_STAGES.length - 1 && (
+                      <span
+                        className={cn(
+                          "mt-2 h-full w-px flex-1",
+                          isComplete ? "bg-[color:var(--accent)]" : "bg-white/10"
+                        )}
+                      />
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveStageKey(stage.key)}
+                    className={cn(
+                      "flex-1 rounded-lg border border-white/10 px-4 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent)]/60",
+                      isActive ? "bg-white/10" : "hover:bg-white/5",
+                      isCurrent && "ring-1 ring-[color:var(--accent)]/70"
+                    )}
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-base font-semibold text-[color:var(--text)]">{stage.label}</p>
+                      {isCurrent && (
+                        <Badge className="border-0 bg-[color:var(--accent)] text-white">Live</Badge>
+                      )}
+                      {!isCurrent && isComplete && (
+                        <Badge variant="outline" className="border-white/15 text-[color:var(--text)]/80">
+                          Done
+                        </Badge>
+                      )}
+                      {!isCurrent && isActive && (
+                        <Badge className="border-0 bg-white/10 text-[color:var(--text)]/70">Preview</Badge>
+                      )}
+                    </div>
+                    <p className="mt-1 text-sm text-[color:var(--muted)]">{stage.description}</p>
+                  </button>
                 </div>
-                <Badge className={cn("border text-xs", getStatusColor(sanitizedStatus))}>
-                  {currentStage.label}
-                </Badge>
+              )
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="glass p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Stage in focus</p>
+                <h3 className="mt-2 text-2xl font-semibold text-[color:var(--text)]">{activeStage.label}</h3>
+                <p className="text-sm text-[color:var(--muted)]">{activeStage.description}</p>
+              </div>
+              <Badge className={cn("border text-xs", getStatusColor(sanitizedStatus))}>
+                {currentStage.label}
+              </Badge>
+            </div>
+
+            {activeStageKey !== sanitizedStatus && (
+              <div className="mt-5 glass p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-[color:var(--text)]">
+                      Previewing {activeStage.label}
+                    </p>
+                    <p className="text-xs text-[color:var(--muted)]">
+                      Line up assets ahead of time and push when everything feels ready.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleJumpToStage}
+                    disabled={isUpdating}
+                    className="bg-[color:var(--accent)] text-white hover:bg-[color:var(--accent)]/90"
+                  >
+                    {isUpdating ? "Updating..." : `Move to ${activeStage.label}`}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 space-y-5">
+              <div className="glass p-4">
+                <Label className="flex items-center justify-between text-[color:var(--text)]/90">
+                  Notes
+                  {isSavingNotes && <span className="text-xs text-[color:var(--muted)]">Saving...</span>}
+                </Label>
+                <Textarea
+                  placeholder="Add notes, links, or instructions for this stage..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="mt-3 min-h-[120px] border-white/10 bg-transparent text-[color:var(--text)] placeholder:text-[color:var(--muted)] focus-visible:ring-[color:var(--accent)]/60"
+                />
               </div>
 
-              {activeStageKey !== sanitizedStatus && (
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/30 p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm font-semibold text-white">
-                        Previewing {activeStage.label}
-                      </p>
-                      <p className="text-xs text-white/60">
-                        Line up assets ahead of time and push when everything feels ready.
-                      </p>
-                    </div>
+              <div className="glass p-4">
+                <Label className="flex items-center justify-between text-[color:var(--text)]/90">
+                  Attachments
+                  {isSavingAttachments && (
+                    <span className="text-xs text-[color:var(--muted)]">Saving...</span>
+                  )}
+                </Label>
+                {canEditAttachments && (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      placeholder="https://drive.google.com/..."
+                      value={newAttachmentUrl}
+                      onChange={(e) => setNewAttachmentUrl(e.target.value)}
+                      className="border-white/10 bg-transparent text-[color:var(--text)] placeholder:text-[color:var(--muted)]"
+                    />
                     <Button
                       type="button"
-                      onClick={handleJumpToStage}
-                      disabled={isUpdating}
-                      className="bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+                      onClick={handleAddAttachment}
+                      disabled={!newAttachmentUrl.trim()}
+                      className="bg-[color:var(--accent)]/20 text-[color:var(--text)] hover:bg-[color:var(--accent)]/30"
                     >
-                      {isUpdating ? "Updating..." : `Move to ${activeStage.label}`}
+                      <Paperclip className="mr-2 h-4 w-4" />
+                      Add
                     </Button>
+                  </div>
+                )}
+                {attachments.length > 0 ? (
+                  <div className="mt-4 space-y-2">
+                    {attachments.map((attachment, index) => (
+                      <div
+                        key={`${attachment.url}-${index}`}
+                        className="flex items-center justify-between gap-4 rounded-lg border border-white/10 bg-white/5 px-4 py-3"
+                      >
+                        <div>
+                          <a
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-sm font-medium text-[color:var(--accent)] underline-offset-2 hover:underline"
+                          >
+                            {getAttachmentLabel(attachment, index)}
+                          </a>
+                          {attachment.addedAt && (
+                            <p className="text-xs text-[color:var(--muted)]">
+                              Added {formatAttachmentDate(attachment.addedAt)}
+                            </p>
+                          )}
+                        </div>
+                        {canEditAttachments && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleRemoveAttachment(index)}
+                            className="text-[color:var(--muted)] hover:text-[color:var(--text)]"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-[color:var(--muted)]">No attachments yet.</p>
+                )}
+              </div>
+
+              {generations && generations.length > 0 && (
+                <div className="glass p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-[color:var(--text)]">Prompt playlist</p>
+                      <p className="text-xs text-[color:var(--muted)]">Variations generated for this content item</p>
+                    </div>
+                    <Badge className="border-0 bg-white/10 text-[color:var(--text)]/80">
+                      {generations.length} takes
+                    </Badge>
+                  </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {generations.map((gen: any, index: number) => (
+                      <div
+                        key={gen.id}
+                        className="rounded-lg border border-white/10 bg-white/5 p-4"
+                      >
+                        <p className="text-xs uppercase text-[color:var(--muted)]">Variation {index + 1}</p>
+                        <p className="mt-2 text-sm text-[color:var(--text)]/90">{gen.prompt_text}</p>
+                        {gen.tags?.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {gen.tags.map((tag: string, i: number) => (
+                              <Badge key={`${gen.id}-${tag}-${i}`} variant="outline" className="border-white/15 text-[color:var(--text)]/80">
+                                #{tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              <div className="mt-6 space-y-5">
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <Label className="flex items-center justify-between text-white/80">
-                    Notes
-                    {isSavingNotes && <span className="text-xs text-white/60">Saving...</span>}
-                  </Label>
-                  <Textarea
-                    placeholder="Add notes, links, or instructions for this stage..."
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    className="mt-3 min-h-[120px] border-white/10 bg-[#0c0c0c] text-white placeholder:text-white/40 focus-visible:ring-[#ff2a2a]"
-                  />
-                </div>
-
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <Label className="flex items-center justify-between text-white/80">
-                    Attachments
-                    {isSavingAttachments && (
-                      <span className="text-xs text-white/60">Saving...</span>
-                    )}
-                  </Label>
-                  {canEditAttachments && (
-                    <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <Input
-                        placeholder="https://drive.google.com/..."
-                        value={newAttachmentUrl}
-                        onChange={(e) => setNewAttachmentUrl(e.target.value)}
-                        className="border-white/10 bg-[#0f0f0f] text-white placeholder:text-white/50"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddAttachment}
-                        disabled={!newAttachmentUrl.trim()}
-                        className="bg-white/10 text-white hover:bg-white/20"
-                      >
-                        <Paperclip className="mr-2 h-4 w-4" />
-                        Add
-                      </Button>
-                    </div>
-                  )}
-                  {attachments.length > 0 ? (
-                    <div className="mt-4 space-y-2">
-                      {attachments.map((attachment, index) => (
-                        <div
-                          key={`${attachment.url}-${index}`}
-                          className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0c0c0c] px-4 py-3"
-                        >
-                          <div>
-                            <a
-                              href={attachment.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-sm font-medium text-[#ff2a2a] underline-offset-2 hover:underline"
-                            >
-                              {getAttachmentLabel(attachment, index)}
-                            </a>
-                            {attachment.addedAt && (
-                              <p className="text-xs text-white/40">
-                                Added {formatAttachmentDate(attachment.addedAt)}
-                              </p>
-                            )}
-                          </div>
-                          {canEditAttachments && (
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleRemoveAttachment(index)}
-                              className="text-white/50 hover:text-white"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="mt-3 text-xs text-white/50">No attachments yet.</p>
-                  )}
-                </div>
-
-                {generations && generations.length > 0 && (
-                  <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-white">Prompt playlist</p>
-                        <p className="text-xs text-white/60">Variations generated for this content item</p>
-                      </div>
-                      <Badge className="border-0 bg-white/10 text-white/70">
-                        {generations.length} takes
-                      </Badge>
-                    </div>
-                    <div className="mt-4 grid gap-3 md:grid-cols-2">
-                      {generations.map((gen: any, index: number) => (
-                        <div
-                          key={gen.id}
-                          className="rounded-2xl border border-white/10 bg-[#121212] p-4"
-                        >
-                          <p className="text-xs uppercase text-white/50">Variation {index + 1}</p>
-                          <p className="mt-2 text-sm text-white/80">{gen.prompt_text}</p>
-                          {gen.tags?.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {gen.tags.map((tag: string, i: number) => (
-                                <Badge key={`${gen.id}-${tag}-${i}`} variant="outline" className="border-white/20 text-white/70">
-                                  #{tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+              {blockerHistory.length > 0 && (
+                <div className="rounded-lg border border-[color:var(--accent)]/30 bg-[color:var(--accent)]/10 p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-[color:var(--accent)]" />
+                    <div>
+                      <p className="font-semibold text-[color:var(--text)]">Blocker history</p>
+                      <ul className="mt-2 space-y-1 text-sm text-[color:var(--muted)]">
+                        {blockerHistory.map((entry, index) => (
+                          <li key={`${entry}-${index}`}>• {entry}</li>
+                        ))}
+                      </ul>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
+            </div>
 
-                {blockerHistory.length > 0 && (
-                  <div className="rounded-2xl border border-[#ff2a2a]/30 bg-[#2b0c0e] p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-[#ff2a2a]" />
-                      <div>
-                        <p className="font-semibold text-white">Blocker history</p>
-                        <ul className="mt-2 space-y-1 text-sm text-white/70">
-                          {blockerHistory.map((entry, index) => (
-                            <li key={`${entry}-${index}`}>• {entry}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
-                <Button
-                  variant="outline"
-                  onClick={handlePreviousStage}
-                  disabled={currentStageIndex === 0 || isUpdating}
-                  className="border-white/30 text-white/80 hover:bg-white/10"
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  {prevStageLabel}
-                </Button>
-                <Button
-                  onClick={handleNextStage}
-                  disabled={!canAdvance || isUpdating}
-                  className="bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
-                >
-                  {isUpdating ? "Updating..." : `Advance to ${nextStageLabel}`}
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+            <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+              <Button
+                variant="outline"
+                onClick={handlePreviousStage}
+                disabled={currentStageIndex === 0 || isUpdating}
+                className="border-white/15 text-[color:var(--muted)] hover:bg-white/10"
+              >
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                {prevStageLabel}
+              </Button>
+              <Button
+                onClick={handleNextStage}
+                disabled={!canAdvance || isUpdating}
+                className="bg-[color:var(--accent)] text-white hover:bg-[color:var(--accent)]/90"
+              >
+                {isUpdating ? "Updating..." : `Advance to ${nextStageLabel}`}
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>

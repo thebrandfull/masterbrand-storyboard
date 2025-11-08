@@ -134,7 +134,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
 
   return (
     <Card className="space-y-6 p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Brand</Label>
@@ -149,12 +149,12 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
           </div>
 
           {selectedBrand && (
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-4 space-y-2">
-              <p className="text-xs uppercase tracking-wide text-white/40">Brand snapshot</p>
+            <div className="glass space-y-2 p-4">
+              <p className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Brand snapshot</p>
               {selectedBrand.mission && (
-                <p className="text-sm text-white/80 leading-snug">{selectedBrand.mission}</p>
+                <p className="text-sm text-[color:var(--muted)] leading-snug">{selectedBrand.mission}</p>
               )}
-              <div className="flex flex-wrap gap-2 text-xs text-white/60">
+              <div className="flex flex-wrap gap-2 text-xs text-[color:var(--muted)]">
                 {selectedBrand.voice_tone && <Badge variant="outline">Tone: {selectedBrand.voice_tone}</Badge>}
                 {selectedBrand.target_audience && (
                   <Badge variant="outline">Audience: {selectedBrand.target_audience}</Badge>
@@ -166,10 +166,10 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
           <div className="space-y-2">
             <Label>Platform</Label>
             <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger className="rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
+              <SelectTrigger className="glass border border-white/10 bg-transparent text-[color:var(--text)]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
+              <SelectContent className="glass border border-white/10 bg-[var(--surface)] text-[color:var(--text)]">
                 {platformOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -185,7 +185,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="rounded-2xl border border-white/10 bg-[#0f0f0f] text-white"
+              className="border border-white/10 bg-transparent text-[color:var(--text)]"
             />
           </div>
         </div>
@@ -193,27 +193,27 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
         <div className="space-y-2">
           <Label>Topic / hook / desired outcome</Label>
           <Textarea
-            className="h-full rounded-2xl border border-white/10 bg-[#0f0f0f] text-white placeholder:text-white/50"
+            className="h-full border border-white/10 bg-transparent text-[color:var(--text)] placeholder:text-[color:var(--muted)]"
             placeholder="Example: 3 myths about scaling brand studios, ending with a CTA to book a workshop."
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
           />
-          {topicsLoading && <p className="text-xs text-white/50">Loading topic deck…</p>}
+          {topicsLoading && <p className="text-xs text-[color:var(--muted)]">Loading topic deck…</p>}
           {topicsError && <p className="text-xs text-destructive">{topicsError}</p>}
           {topics.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-xs text-white/60">Click a topic to autofill</Label>
+              <Label className="text-xs text-[color:var(--muted)]">Click a topic to autofill</Label>
               <div className="flex flex-wrap gap-2">
                 {topics.map((topicOption) => (
                   <button
                     key={topicOption.id}
                     type="button"
                     onClick={() => setTopic(topicOption.label)}
-                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/80 hover:border-[#ff2a2a]/60"
+                    className="rounded-lg border border-white/10 bg-white/5 px-3 py-1 text-xs text-[color:var(--text)]/80 transition hover:border-[color:var(--accent)]/60 hover:text-[color:var(--text)]"
                   >
                     {topicOption.label}
                     {typeof topicOption.weight === "number" && (
-                      <span className="text-white/40 ml-2">w:{topicOption.weight}</span>
+                      <span className="ml-2 text-[color:var(--muted)]">w:{topicOption.weight}</span>
                     )}
                   </button>
                 ))}
@@ -229,33 +229,33 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
         <Button
           onClick={handleGenerate}
           disabled={loading || !brandId}
-          className="rounded-full bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+          className="bg-[color:var(--accent)] text-white hover:bg-[color:var(--accent)]/90"
         >
           {loading ? "Generating..." : "Generate content"}
         </Button>
       </div>
 
       {result && (
-        <Card className="space-y-4 border border-[#ff2a2a]/40 bg-[#0f0f0f]/80 p-5">
+        <Card className="space-y-4 border border-white/10 bg-white/5 p-5">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-wide text-white/40">Content item</p>
-              <h2 className="text-xl font-semibold">{result.title}</h2>
+              <p className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Content item</p>
+              <h2 className="text-xl font-semibold text-[color:var(--text)]">{result.title}</h2>
             </div>
-            <Link href={`/content/${result.id}`} className="text-primary text-sm underline">
+            <Link href={`/content/${result.id}`} className="text-[color:var(--accent)] text-sm underline-offset-2 hover:underline">
               Open record ↗
             </Link>
           </div>
 
-          <p className="text-sm text-white/70">{result.description}</p>
+          <p className="text-sm text-[color:var(--muted)]">{result.description}</p>
 
           <div>
-            <p className="text-xs uppercase tracking-wide text-white/40 mb-2">Prompts</p>
+            <p className="mb-2 text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Prompts</p>
             <div className="space-y-2">
               {result.prompts.map((prompt, index) => (
-                <Card key={`${prompt}-${index}`} className="border-white/10 bg-[#0b0b0b]/80 p-3 text-sm">
-                  <p className="font-medium">Variation {index + 1}</p>
-                  <p className="text-white/70 whitespace-pre-wrap">{prompt}</p>
+                <Card key={`${prompt}-${index}`} className="border-white/10 bg-white/5 p-3 text-sm">
+                  <p className="font-medium text-[color:var(--text)]">Variation {index + 1}</p>
+                  <p className="whitespace-pre-wrap text-[color:var(--muted)]">{prompt}</p>
                 </Card>
               ))}
             </div>
@@ -263,15 +263,15 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
 
           <div className="flex flex-wrap gap-2">
             {result.tags.map((tag) => (
-              <Badge key={tag} className="bg-white/10 text-xs">
+              <Badge key={tag} className="bg-white/10 text-xs text-[color:var(--text)]/80">
                 #{tag}
               </Badge>
             ))}
           </div>
 
           <div>
-            <p className="text-xs uppercase tracking-wide text-white/40 mb-1">Thumbnail brief</p>
-            <p className="text-sm text-white/70">{result.thumbnailBrief}</p>
+            <p className="mb-1 text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Thumbnail brief</p>
+            <p className="text-sm text-[color:var(--muted)]">{result.thumbnailBrief}</p>
           </div>
         </Card>
       )}

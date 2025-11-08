@@ -19,13 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn(inter.className, "bg-[#050505] text-white antialiased")}>
-        <div className="pointer-events-none fixed inset-0 -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(255,255,255,0.08),transparent_42%),radial-gradient(circle_at_80%_0%,rgba(255,42,42,0.18),transparent_55%),radial-gradient(circle_at_50%_90%,rgba(62,91,255,0.12),transparent_60%)]" />
-        </div>
-        <div className="relative flex min-h-screen w-full">
+      <body className={cn(inter.className, "bg-[var(--bg)] text-[var(--text)] antialiased")}>
+        <div className="flex min-h-screen w-full">
           <Sidebar />
-          <main className="relative ml-64 flex-1 px-4 py-8 sm:px-8 lg:px-10">
+          <main className="relative flex-1 px-4 py-8 sm:px-8 lg:px-10">
             <div className="mx-auto w-full max-w-6xl space-y-10">{children}</div>
           </main>
         </div>

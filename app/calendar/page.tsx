@@ -142,19 +142,19 @@ export default function CalendarPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-white/60">Loading...</p>
+        <p className="text-[color:var(--muted)]">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-10">
-      <section className="hero-panel p-6 sm:p-10">
+    <div className="space-y-8">
+      <section className="glass p-6 sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-white/50">Content calendar</p>
-            <h1 className="text-4xl font-semibold">{format(currentDate, "MMMM yyyy")}</h1>
-            <p className="mt-2 text-white/70">
+          <div className="space-y-2">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Content calendar</p>
+            <h1 className="text-3xl font-semibold text-[color:var(--text)]">{format(currentDate, "MMMM yyyy")}</h1>
+            <p className="text-sm text-[color:var(--muted)]">
               Plan and visualize your content schedule with live status filtering.
             </p>
           </div>
@@ -164,15 +164,15 @@ export default function CalendarPage() {
               selectedBrandId={selectedBrandId}
               onBrandChange={setSelectedBrandId}
             />
-            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/30 p-2">
-              <Button variant="ghost" className="rounded-full text-white hover:bg-white/10" onClick={handleToday}>
+            <div className="glass flex items-center gap-2 px-2 py-2">
+              <Button variant="ghost" className="text-[color:var(--text)] hover:bg-white/10" onClick={handleToday}>
                 Today
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10" onClick={handlePreviousMonth}>
-                <ChevronLeft className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="text-[color:var(--text)] hover:bg-white/10" onClick={handlePreviousMonth}>
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full text-white hover:bg-white/10" onClick={handleNextMonth}>
-                <ChevronRight className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="text-[color:var(--text)] hover:bg-white/10" onClick={handleNextMonth}>
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -184,15 +184,15 @@ export default function CalendarPage() {
           <Card
             key={stat.value}
             className={cn(
-              "cursor-pointer border-white/10 bg-[#111111]/70 p-4",
-              stat.active ? "ring-1 ring-[#ff2a2a]" : ""
+              "cursor-pointer p-4 transition",
+              stat.active ? "ring-1 ring-[color:var(--accent)]" : "hover:bg-white/12"
             )}
             onClick={() => toggleStatus(stat.value)}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.4em] text-white/40">{stat.label}</p>
-                <p className="mt-2 text-3xl font-semibold">{stat.count}</p>
+                <p className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">{stat.label}</p>
+                <p className="mt-2 text-2xl font-semibold text-[color:var(--text)]">{stat.count}</p>
               </div>
               <Badge className={getStatusColor(stat.value)}>{stat.active ? "On" : "Off"}</Badge>
             </div>
@@ -201,7 +201,7 @@ export default function CalendarPage() {
       </div>
 
       <Card className="p-6">
-        <div className="mb-6 grid grid-cols-7 gap-4 text-center text-sm font-semibold text-white/60">
+        <div className="mb-6 grid grid-cols-7 gap-4 text-center text-xs font-semibold text-[color:var(--muted)]">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div key={day}>{day}</div>
           ))}
@@ -209,7 +209,7 @@ export default function CalendarPage() {
         <div className="grid grid-cols-7 gap-4">
           {allDays.map((day, index) => {
             if (!day) {
-              return <div key={`empty-${index}`} className="h-32 rounded-2xl border border-dashed border-white/5" />
+              return <div key={`empty-${index}`} className="h-28 rounded-lg border border-dashed border-white/10" />
             }
 
             const dateKey = format(day, "yyyy-MM-dd")
@@ -276,8 +276,8 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
       <DialogTrigger asChild>
         <Card
           className={cn(
-            "h-32 cursor-pointer overflow-hidden border-white/10 bg-[#0b0b0b]/85 p-3 transition hover:-translate-y-0.5 hover:border-[#ff2a2a]/40",
-            isToday ? "ring-2 ring-[#ff2a2a]" : ""
+            "h-28 cursor-pointer overflow-hidden p-3 transition hover:bg-white/12",
+            isToday ? "ring-1 ring-[color:var(--accent)]" : ""
           )}
         >
           <div className="mb-2 flex items-start justify-between">
@@ -294,7 +294,7 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
             {items.slice(0, 2).map((item) => (
               <div
                 key={item.id}
-                className={cn("truncate rounded-full px-3 py-1 text-xs font-medium", getStatusColor(item.status))}
+                className={cn("truncate rounded-lg px-2.5 py-1 text-xs font-medium", getStatusColor(item.status))}
               >
                 {item.platform}
               </div>
@@ -303,21 +303,21 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
           </div>
         </Card>
       </DialogTrigger>
-      <DialogContent className="max-w-lg rounded-3xl border border-white/10 bg-[#111111]/90">
+      <DialogContent className="glass max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold text-white">{format(day, "MMMM d, yyyy")}</DialogTitle>
+          <DialogTitle className="text-xl font-semibold text-[color:var(--text)]">{format(day, "MMMM d, yyyy")}</DialogTitle>
         </DialogHeader>
         <div className="mt-4 max-h-[60vh] space-y-3 overflow-y-auto">
           {items.length === 0 ? (
-            <p className="py-8 text-center text-sm text-white/60">No content scheduled for this day</p>
+            <p className="py-8 text-center text-sm text-[color:var(--muted)]">No content scheduled for this day</p>
           ) : (
             items.map((item) => (
               <Link key={item.id} href={`/content/${item.id}`}>
-                <Card className="cursor-pointer border-white/10 bg-[#0c0c0c]/80 p-4 transition hover:border-[#ff2a2a]/40">
+                <Card className="cursor-pointer p-4 transition hover:bg-white/12">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-semibold capitalize text-white">{item.platform}</div>
-                      <div className="text-xs text-white/60">ID: {item.id.slice(0, 8)}</div>
+                      <div className="font-semibold capitalize text-[color:var(--text)]">{item.platform}</div>
+                      <div className="text-xs text-[color:var(--muted)]">ID: {item.id.slice(0, 8)}</div>
                     </div>
                     <Badge className={getStatusColor(item.status)}>{item.status}</Badge>
                   </div>
@@ -327,13 +327,13 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
           )}
         </div>
         <div className="mt-4 border-t border-white/10 pt-4">
-          <p className="text-sm font-semibold text-white/80">Quick create</p>
+          <p className="text-sm font-semibold text-[color:var(--text)]">Quick create</p>
           <div className="mt-3 flex flex-col gap-3 md:flex-row md:items-center">
             <Select value={platform} onValueChange={setPlatform}>
-              <SelectTrigger className="rounded-2xl border border-white/10 bg-[#0f0f0f] text-white">
+              <SelectTrigger className="glass border border-white/10 bg-transparent text-[color:var(--text)]">
                 <SelectValue placeholder="Platform" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border border-white/10 bg-[#111111] text-white">
+              <SelectContent className="glass border border-white/10 bg-[var(--surface)] text-[color:var(--text)]">
                 {platformOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -344,7 +344,7 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
             <Button
               onClick={handleCreate}
               disabled={creating || !brandId}
-              className="rounded-full bg-[#ff2a2a] text-white hover:bg-[#ff2a2a]/90"
+              className="bg-[color:var(--accent)] text-white hover:bg-[color:var(--accent)]/90"
             >
               {creating ? <LoaderIcon /> : <Plus className="mr-2 h-4 w-4" />}
               {creating ? "Creating..." : "Create slot"}
@@ -357,8 +357,10 @@ function DayCard({ day, currentDate, items, isToday, brandId }: DayCardProps) {
 }
 
 function LoaderIcon() {
-  return <span className="relative flex h-4 w-4 items-center justify-center">
-    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-  </span>
+  return (
+    <span className="relative flex h-4 w-4 items-center justify-center">
+      <span className="absolute inline-flex h-full w-full animate-ping rounded-lg bg-[color:var(--accent)]/60" />
+      <span className="relative inline-flex h-2 w-2 rounded-lg bg-[color:var(--accent)]" />
+    </span>
+  )
 }

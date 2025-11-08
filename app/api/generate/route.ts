@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
-import { DeepSeekError, generateContent } from "@/lib/deepseek"
 import { supabase } from "@/lib/supabase"
 import type { Database } from "@/types/database"
-import type { PromptGenerationRequest } from "@/lib/deepseek"
 import type { SupabaseClient } from "@supabase/supabase-js"
-
-const SUPPORTED_PLATFORMS = ["tiktok", "instagram", "youtube"]
+import {
+  SUPPORTED_PLATFORMS,
+  generateAndStoreContent,
+  isDeepSeekError,
+  loadGenerationContext,
+  type SupportedPlatform,
+} from "@/lib/generation-runner"
 
 export async function POST(request: NextRequest) {
   const db = supabase as SupabaseClient<Database>
@@ -13,7 +16,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { brandId, topic, platform, dateTarget } = body ?? {}
     const sanitizedTopic = typeof topic === "string" ? topic.trim() : ""
-    const normalizedPlatform = typeof platform === "string" ? platform.toLowerCase() : ""
+    const normalizedPlatform = (typeof platform === "string"
+      ? platform.toLowerCase()
+      : "") as SupportedPlatform
 
     if (!brandId || !sanitizedTopic || !SUPPORTED_PLATFORMS.includes(normalizedPlatform)) {
       return NextResponse.json(
@@ -29,84 +34,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch brand data
-    const { data: brand, error: brandError } = await db
-      .from("brands")
-      .select("*")
-      .eq("id", brandId)
-      .single()
-
-    if (brandError || !brand) {
-      return NextResponse.json(
-        { error: "Brand not found" },
-        { status: 404 }
-      )
-    }
-
-    const brandRecord = brand as Database["public"]["Tables"]["brands"]["Row"]
-    const visualKeywords = parseVisualKeywords(brandRecord.visual_lexicon)
-    const negativePrompts = Array.isArray(brandRecord.negative_prompts)
-      ? brandRecord.negative_prompts
-      : []
-
-    const generated = await generateContent({
-      brand: brandRecord as PromptGenerationRequest["brand"],
+    const context = await loadGenerationContext(db, brandId)
+    const { contentItem, generated } = await generateAndStoreContent({
+      db,
+      context,
       topic: sanitizedTopic,
       platform: normalizedPlatform,
-      visualKeywords,
-      negativePrompts,
+      dateTarget,
     })
-
-    // Create content item
-    const newContentItem: Database["public"]["Tables"]["content_items"]["Insert"] = {
-      brand_id: brandId,
-      date_target: dateTarget,
-      platform: normalizedPlatform,
-      status: "prompted",
-      notes: sanitizedTopic,
-    }
-
-    const contentItemsQuery = db.from("content_items") as any
-    const { data: contentItem, error: contentError } = await contentItemsQuery
-      .insert(newContentItem)
-      .select()
-      .single()
-
-    if (contentError || !contentItem) {
-      return NextResponse.json(
-        { error: `Failed to create content item: ${contentError?.message || "Unknown error"}` },
-        { status: 500 }
-      )
-    }
-
-    const contentRecord = contentItem as Database["public"]["Tables"]["content_items"]["Row"]
-
-    // Store generations
-    const generationInserts: Database["public"]["Tables"]["generations"]["Insert"][] = generated.prompts.map((prompt, index) => ({
-      content_item_id: contentRecord.id,
-      prompt_text: prompt,
-      title: index === 0 ? generated.title : `${generated.title} (v${index + 1})`,
-      description: generated.description,
-      tags: generated.tags,
-      thumbnail_brief: generated.thumbnailBrief,
-      model_params: { platform: normalizedPlatform, topic: sanitizedTopic },
-    }))
-
-    const generationsQuery = db.from("generations") as any
-    const { error: genError } = await generationsQuery.insert(generationInserts)
-
-    if (genError) {
-      // Rollback: delete the content item if generations fail
-      await db.from("content_items").delete().eq("id", contentRecord.id)
-      return NextResponse.json(
-        { error: `Failed to store generated content: ${genError.message}` },
-        { status: 500 }
-      )
-    }
 
     return NextResponse.json({
       success: true,
-      contentItem: contentRecord,
+      contentItem,
       generated,
       topic: sanitizedTopic,
     })
@@ -119,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
     console.error("[API /generate]", JSON.stringify(errorDetails))
 
-    if (error instanceof DeepSeekError) {
+    if (isDeepSeekError(error)) {
       return NextResponse.json(
         { error: error.message, code: error.code },
         { status: error.status ?? 500 }
@@ -132,12 +71,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-function parseVisualKeywords(value: string | null): string[] {
-  if (!value) return []
-  return value
-    .split(",")
-    .map((keyword) => keyword.trim())
-    .filter(Boolean)
 }

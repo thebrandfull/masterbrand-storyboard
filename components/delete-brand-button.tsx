@@ -67,9 +67,9 @@ export function DeleteBrandButton({ brandId, brandName }: DeleteBrandButtonProps
       </DialogTrigger>
       <DialogContent className="glass border-white/10">
         <DialogHeader>
-          <DialogTitle>Delete Brand</DialogTitle>
-          <DialogDescription className="text-white/60">
-            Are you sure you want to delete <strong className="text-white">{brandName}</strong>?
+          <DialogTitle className="text-[color:var(--text)]">Delete Brand</DialogTitle>
+          <DialogDescription className="text-[color:var(--muted)]">
+            Are you sure you want to delete <strong className="text-[color:var(--text)]">{brandName}</strong>?
             This action cannot be undone and will permanently delete all associated content,
             topics, and generations.
           </DialogDescription>

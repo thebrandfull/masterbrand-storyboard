@@ -21,24 +21,24 @@ export default async function BrandDetailPage({ params }: { params: { id: string
   const platformConstraints = brand.platform_constraints
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <Link href="/brands">
-        <Button variant="ghost" className="rounded-full border border-white/5 text-white hover:bg-white/10">
+        <Button variant="ghost" className="border border-white/10 text-[color:var(--text)] hover:bg-white/10">
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Brands
+          Back to brands
         </Button>
       </Link>
 
-      <section className="hero-panel p-6 sm:p-10">
+      <section className="glass p-6 sm:p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-white/50">Brand profile</p>
-            <h1 className="mt-2 text-4xl font-semibold">{brand.name}</h1>
-            <p className="mt-3 text-white/70 max-w-2xl">{brand.mission}</p>
+          <div className="space-y-3">
+            <p className="text-[11px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Brand profile</p>
+            <h1 className="text-3xl font-semibold text-[color:var(--text)]">{brand.name}</h1>
+            <p className="max-w-2xl text-sm text-[color:var(--muted)]">{brand.mission}</p>
           </div>
           <div className="flex gap-3">
             <Link href={`/brands/${brand.id}/edit`}>
-              <Button className="rounded-full border border-white/10 bg-white/10 text-white hover:bg-white/20">
+              <Button className="border border-white/10 bg-white/5 text-[color:var(--text)] hover:bg-white/10">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
@@ -55,12 +55,12 @@ export default async function BrandDetailPage({ params }: { params: { id: string
           </CardHeader>
           <CardContent className="mt-4 space-y-4 p-0">
             <div>
-              <h4 className="text-xs uppercase tracking-[0.3em] text-white/50">Target Audience</h4>
-              <p className="mt-1 text-sm text-white/80">{brand.target_audience || "Not specified"}</p>
+              <h4 className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--muted)]">Target audience</h4>
+              <p className="mt-1 text-sm text-[color:var(--muted)]">{brand.target_audience || "Not specified"}</p>
             </div>
             <div>
-              <h4 className="text-xs uppercase tracking-[0.3em] text-white/50">Voice Tone</h4>
-              <p className="mt-1 text-sm text-white/80">{brand.voice_tone || "Not specified"}</p>
+              <h4 className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--muted)]">Voice tone</h4>
+              <p className="mt-1 text-sm text-[color:var(--muted)]">{brand.voice_tone || "Not specified"}</p>
             </div>
           </CardContent>
         </Card>
@@ -72,7 +72,7 @@ export default async function BrandDetailPage({ params }: { params: { id: string
           <CardContent className="mt-4 p-0">
             <div className="flex flex-wrap gap-2">
               {brand.visual_lexicon?.split(", ").map((keyword: string, i: number) => (
-                <Badge key={i} className="rounded-full border border-white/10 bg-white/5 text-white/80">
+                <Badge key={i} className="bg-white/10 text-xs text-[color:var(--text)]/80">
                   {keyword}
                 </Badge>
               ))}
@@ -86,16 +86,16 @@ export default async function BrandDetailPage({ params }: { params: { id: string
           </CardHeader>
           <CardContent className="mt-4 grid gap-4 p-0">
             <div>
-              <h4 className="text-xs uppercase tracking-[0.3em] text-green-400/80">Do&apos;s</h4>
-              <ul className="mt-2 space-y-1 text-sm text-white/70">
+              <h4 className="text-[10px] uppercase tracking-[0.3em] text-emerald-300/80">Do&apos;s</h4>
+              <ul className="mt-2 space-y-1 text-sm text-[color:var(--muted)]">
                 {brand.dos?.map((item: string, i: number) => (
                   <li key={i}>• {item}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <h4 className="text-xs uppercase tracking-[0.3em] text-red-400/80">Don&apos;ts</h4>
-              <ul className="mt-2 space-y-1 text-sm text-white/70">
+              <h4 className="text-[10px] uppercase tracking-[0.3em] text-rose-300/80">Don&apos;ts</h4>
+              <ul className="mt-2 space-y-1 text-sm text-[color:var(--muted)]">
                 {brand.donts?.map((item: string, i: number) => (
                   <li key={i}>• {item}</li>
                 ))}
@@ -110,20 +110,20 @@ export default async function BrandDetailPage({ params }: { params: { id: string
           </CardHeader>
           <CardContent className="mt-4 space-y-5 p-0">
             <div>
-              <h4 className="text-xs uppercase tracking-[0.3em] text-white/50">Proof Points</h4>
+              <h4 className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--muted)]">Proof points</h4>
               <div className="mt-2 flex flex-wrap gap-2">
                 {brand.proof_points?.map((item: string, i: number) => (
-                  <Badge key={i} variant="outline" className="rounded-full border-white/20 text-xs text-white/80">
+                  <Badge key={i} variant="outline" className="text-xs text-[color:var(--text)]/80">
                     {item}
                   </Badge>
                 ))}
               </div>
             </div>
             <div>
-              <h4 className="text-xs uppercase tracking-[0.3em] text-white/50">CTAs</h4>
+              <h4 className="text-[10px] uppercase tracking-[0.3em] text-[color:var(--muted)]">CTAs</h4>
               <div className="mt-2 flex flex-wrap gap-2">
                 {brand.cta_library?.map((item: string, i: number) => (
-                  <Badge key={i} variant="outline" className="rounded-full border-white/20 text-xs text-white/80">
+                  <Badge key={i} variant="outline" className="text-xs text-[color:var(--text)]/80">
                     {item}
                   </Badge>
                 ))}
@@ -139,13 +139,13 @@ export default async function BrandDetailPage({ params }: { params: { id: string
           <CardContent className="mt-4 p-0">
             <div className="flex flex-wrap gap-2">
               {platformConstraints?.platforms?.tiktok && (
-                <Badge className="rounded-full bg-[#ff2a2a]/20 text-[#ff2a2a]">TikTok</Badge>
+                <Badge className="bg-[color:var(--accent)]/15 text-[color:var(--accent)]">TikTok</Badge>
               )}
               {platformConstraints?.platforms?.instagram && (
-                <Badge className="rounded-full bg-[#ff2a2a]/20 text-[#ff2a2a]">Instagram</Badge>
+                <Badge className="bg-[color:var(--accent)]/15 text-[color:var(--accent)]">Instagram</Badge>
               )}
               {platformConstraints?.platforms?.youtube && (
-                <Badge className="rounded-full bg-[#ff2a2a]/20 text-[#ff2a2a]">YouTube</Badge>
+                <Badge className="bg-[color:var(--accent)]/15 text-[color:var(--accent)]">YouTube</Badge>
               )}
             </div>
           </CardContent>
@@ -154,13 +154,13 @@ export default async function BrandDetailPage({ params }: { params: { id: string
         <Card className="p-6">
           <CardHeader className="p-0">
             <CardTitle>Topic Deck ({topics.length})</CardTitle>
-            <CardDescription className="mt-1 text-white/50">Content topics and weights</CardDescription>
+            <CardDescription className="mt-1 text-[color:var(--muted)]">Content topics and weights</CardDescription>
           </CardHeader>
           <CardContent className="mt-4 space-y-3 p-0">
             {topics.map((topic: any) => (
-              <div key={topic.id} className="flex items-center justify-between rounded-2xl border border-white/5 bg-black/20 px-4 py-3">
-                <span className="text-sm text-white/80">{topic.label}</span>
-                <Badge className="rounded-full bg-white/10 text-white/70">Weight: {topic.weight}</Badge>
+              <div key={topic.id} className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3">
+                <span className="text-sm text-[color:var(--muted)]">{topic.label}</span>
+                <Badge className="bg-white/10 text-[color:var(--text)]/80">Weight: {topic.weight}</Badge>
               </div>
             ))}
           </CardContent>
