@@ -3,24 +3,24 @@
 import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { BrandSelector } from "@/components/brand-selector"
 import { Plus, Calendar as CalendarIcon, Zap, TrendingUp } from "lucide-react"
 import { getBrands } from "@/lib/actions/brands"
 import { getContentItemsByStatus } from "@/lib/actions/content"
 import { Badge } from "@/components/ui/badge"
+import { useBrandSelection } from "@/hooks/use-brand-selection"
+import { LuminousPanel } from "@/components/ui/luminous-panel"
+import { Card } from "@/components/ui/card"
 
 export default function Dashboard() {
   const [brands, setBrands] = useState<any[]>([])
-  const [selectedBrandId, setSelectedBrandId] = useState<string>("")
   const [contentByStatus, setContentByStatus] = useState<Record<string, any[]>>({})
   const [loading, setLoading] = useState(true)
+  const { selectedBrandId, setSelectedBrandId } = useBrandSelection()
 
   const loadBrands = useCallback(async () => {
     const result = await getBrands()
     if (result.success) {
       setBrands(result.brands)
-      setSelectedBrandId((current) => current || ((result.brands as any)[0]?.id ?? ""))
     }
     setLoading(false)
   }, [])
@@ -35,6 +35,12 @@ export default function Dashboard() {
   useEffect(() => {
     loadBrands()
   }, [loadBrands])
+
+  useEffect(() => {
+    if (!selectedBrandId && brands.length > 0) {
+      setSelectedBrandId(brands[0].id)
+    }
+  }, [brands, selectedBrandId, setSelectedBrandId])
 
   useEffect(() => {
     if (selectedBrandId) {
@@ -107,7 +113,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <section className="glass p-6 sm:p-8">
+      <LuminousPanel className="p-6 sm:p-8">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-4">
             <p className="text-[11px] uppercase tracking-[0.32em] text-[color:var(--muted)]">Command center</p>
@@ -124,11 +130,6 @@ export default function Dashboard() {
             )}
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
-            <BrandSelector
-              brands={brands}
-              selectedBrandId={selectedBrandId}
-              onBrandChange={setSelectedBrandId}
-            />
             <Link href="/calendar">
               <Button variant="secondary" className="bg-transparent text-[color:var(--text)] hover:bg-white/10">
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -163,7 +164,7 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-      </section>
+      </LuminousPanel>
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statuses.map((status) => (

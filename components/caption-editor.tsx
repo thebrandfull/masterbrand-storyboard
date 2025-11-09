@@ -50,8 +50,6 @@ const animationMap: Partial<Record<CaptionAnimation, string>> = {
   shake: "caption-punch",
   "rotate-in": "caption-drop",
   "blur-in": "caption-fade",
-  "slide-up": "caption-slide-up",
-  "slide-down": "caption-slide-down",
 }
 
 const animationOptions: CaptionAnimation[] = [

@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { BrandSelector } from "@/components/brand-selector"
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react"
 import { getBrands } from "@/lib/actions/brands"
 import { createContentItem, getContentItemsByBrand } from "@/lib/actions/content"
@@ -14,6 +13,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { useBrandSelection } from "@/hooks/use-brand-selection"
 
 interface BrandRecord {
   id: string
@@ -45,18 +45,17 @@ const platformOptions = [
 
 export default function CalendarPage() {
   const [brands, setBrands] = useState<BrandRecord[]>([])
-  const [selectedBrandId, setSelectedBrandId] = useState<string>("")
   const [contentItems, setContentItems] = useState<CalendarContentItem[]>([])
   const [activeStatuses, setActiveStatuses] = useState<string[]>(statusOptions.map((s) => s.value))
   const [currentDate, setCurrentDate] = useState(new Date())
   const [loading, setLoading] = useState(true)
+  const { selectedBrandId, setSelectedBrandId } = useBrandSelection()
 
   const loadBrands = useCallback(async () => {
     const result = await getBrands()
     if (result.success) {
       const brandList = (result.brands ?? []) as BrandRecord[]
       setBrands(brandList)
-      setSelectedBrandId((current) => current || (brandList[0]?.id ?? ""))
     }
     setLoading(false)
   }, [])
@@ -71,6 +70,12 @@ export default function CalendarPage() {
   useEffect(() => {
     loadBrands()
   }, [loadBrands])
+
+  useEffect(() => {
+    if (!selectedBrandId && brands.length > 0) {
+      setSelectedBrandId(brands[0].id)
+    }
+  }, [brands, selectedBrandId, setSelectedBrandId])
 
   useEffect(() => {
     if (selectedBrandId) {
@@ -158,15 +163,10 @@ export default function CalendarPage() {
               Plan and visualize your content schedule with live status filtering.
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <BrandSelector
-              brands={brands}
-              selectedBrandId={selectedBrandId}
-              onBrandChange={setSelectedBrandId}
-            />
-            <div className="glass flex items-center gap-2 px-2 py-2">
-              <Button variant="ghost" className="text-[color:var(--text)] hover:bg-white/10" onClick={handleToday}>
-                Today
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="glass flex items-center gap-2 px-2 py-2">
+            <Button variant="ghost" className="text-[color:var(--text)] hover:bg-white/10" onClick={handleToday}>
+              Today
               </Button>
               <Button variant="ghost" size="icon" className="text-[color:var(--text)] hover:bg-white/10" onClick={handlePreviousMonth}>
                 <ChevronLeft className="h-4 w-4" />

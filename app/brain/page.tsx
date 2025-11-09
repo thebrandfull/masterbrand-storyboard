@@ -1,6 +1,6 @@
 import { getBrands } from "@/lib/actions/brands"
-import { Card } from "@/components/ui/card"
 import BrandChat from "@/components/brand-chat"
+import { LuminousPanel } from "@/components/ui/luminous-panel"
 
 export const dynamic = "force-dynamic"
 
@@ -9,7 +9,7 @@ export default async function BrandBrainPage() {
 
   return (
     <div className="space-y-8">
-      <Card className="hero-panel p-6 sm:p-10">
+      <LuminousPanel className="p-6 sm:p-10">
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-[0.4em] text-white/50">Brand Brain</p>
           <h1 className="text-4xl font-semibold text-white">Talk to your playbook</h1>
@@ -17,7 +17,7 @@ export default async function BrandBrainPage() {
             Ask strategy questions, generate prompts, and turn replies into action without leaving the studio.
           </p>
         </div>
-      </Card>
+      </LuminousPanel>
 
       <BrandChat brands={brands || []} />
     </div>

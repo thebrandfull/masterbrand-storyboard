@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server"
-import { randomUUID } from "crypto"
-import { generateSpeech } from "@/lib/elevenlabs"
-import type { AlignmentCharacter } from "@/lib/elevenlabs"
-import type { CaptionWord } from "@/types/captions"
+import { generateSpeech, buildWordsFromAlignment } from "@/lib/elevenlabs"
 
 export const runtime = "nodejs"
 
@@ -41,75 +38,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
-
-function buildWordsFromAlignment(alignment: AlignmentCharacter[] | undefined, fallbackText: string): CaptionWord[] {
-  if (!alignment || alignment.length === 0) {
-    return approximateWords(fallbackText)
-  }
-
-  const words: CaptionWord[] = []
-  let current = ""
-  let start = 0
-  let end = 0
-
-  for (const item of alignment) {
-    const char = item.character
-
-    if (!char || char.trim() === "" || /[\n\r]/.test(char)) {
-      if (current.trim()) {
-        words.push({
-          id: randomUUID(),
-          text: current,
-          start: Number((start ?? 0).toFixed(3)),
-          end: Number((end ?? start ?? 0).toFixed(3)),
-        })
-      }
-      current = ""
-      start = 0
-      end = 0
-      continue
-    }
-
-    if (!current) {
-      start = item.start ?? start
-    }
-
-    current += char
-    end = item.end ?? end
-  }
-
-  if (current.trim()) {
-    words.push({
-      id: randomUUID(),
-      text: current,
-      start: Number((start ?? 0).toFixed(3)),
-      end: Number((end ?? start ?? 0).toFixed(3)),
-    })
-  }
-
-  if (words.length === 0) {
-    return approximateWords(fallbackText)
-  }
-
-  return words
-}
-
-function approximateWords(text: string): CaptionWord[] {
-  const sanitized = text.trim()
-  if (!sanitized) return []
-
-  const tokens = sanitized.split(/\s+/)
-  const baseDuration = 0.38
-
-  return tokens.map((token, index) => {
-    const start = Number((index * baseDuration).toFixed(3))
-    const end = Number((start + baseDuration).toFixed(3))
-    return {
-      id: randomUUID(),
-      text: token,
-      start,
-      end,
-    }
-  })
 }

@@ -57,7 +57,13 @@ import { DEFAULT_CAPTION_STYLE } from "@/types/caption-styles";
 import type { CaptionStyle } from "@/types/caption-styles";
 
 type BrandRow = Database["public"]["Tables"]["brands"]["Row"];
-type Cameo = Database["public"]["Tables"]["cameos"]["Row"];
+type Cameo = {
+  id: string;
+  brand_id?: string;
+  name: string;
+  description: string;
+  visual_description: string;
+};
 
 interface WorkflowResult {
   videoUrl: string | null;

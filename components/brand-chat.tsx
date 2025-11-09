@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
-import { Card } from "@/components/ui/card"
+import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { BrandSelector } from "@/components/brand-selector"
 import { Loader2, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { LuminousPanel } from "@/components/ui/luminous-panel"
 import type { BrandVectorInsight } from "@/lib/brand-brain"
 
 interface BrandChatProps {
@@ -16,6 +16,9 @@ interface BrandChatProps {
 interface ChatMessage {
   role: "user" | "assistant"
   content: string
+  id?: string
+  created_at?: string
+  pending?: boolean
 }
 
 function getReferenceLabel(metadata?: Record<string, unknown> | null) {
@@ -29,25 +32,70 @@ export default function BrandChat({ brands }: BrandChatProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
+  const [historyLoading, setHistoryLoading] = useState(false)
   const [references, setReferences] = useState<BrandVectorInsight[]>([])
   const { toast } = useToast()
 
+  const loadHistory = useCallback(async (brandId: string) => {
+    if (!brandId) return
+    setHistoryLoading(true)
+    try {
+      const response = await fetch(`/api/brand-chat?brandId=${brandId}`)
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to load chat history")
+      }
+      setMessages(data.messages || [])
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to load history."
+      console.error("[BrandChat] history load failed:", message)
+      setMessages([])
+      toast({
+        variant: "destructive",
+        title: "Chat history unavailable",
+        description: message,
+      })
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [toast])
+
+  useEffect(() => {
+    if (!selectedBrandId && brands[0]?.id) {
+      setSelectedBrandId(brands[0].id)
+      return
+    }
+    if (selectedBrandId) {
+      setReferences([])
+      setMessages([])
+      loadHistory(selectedBrandId)
+    }
+  }, [selectedBrandId, brands, loadHistory])
+
   if (!brands?.length) {
     return (
-      <Card className="p-6">
+      <LuminousPanel className="p-6">
         <p className="text-sm text-white/70">
           Add a brand first—once it exists, the Brand Brain can spin up strategy notes instantly.
         </p>
-      </Card>
+      </LuminousPanel>
     )
   }
 
   const sendMessage = async () => {
-    if (!input.trim() || !selectedBrandId) return
+    if (!input.trim() || !selectedBrandId || loading) return
 
-    const newMessage: ChatMessage = { role: "user", content: input.trim() }
-    const nextMessages = [...messages, newMessage]
-    setMessages(nextMessages)
+    const trimmed = input.trim()
+    const optimisticId = `local-${Date.now()}`
+    const optimisticMessage: ChatMessage = {
+      id: optimisticId,
+      role: "user",
+      content: trimmed,
+      created_at: new Date().toISOString(),
+      pending: true,
+    }
+
+    setMessages((prev) => [...prev, optimisticMessage])
     setInput("")
     setLoading(true)
 
@@ -55,7 +103,7 @@ export default function BrandChat({ brands }: BrandChatProps) {
       const response = await fetch("/api/brand-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brandId: selectedBrandId, history: messages, prompt: newMessage.content }),
+        body: JSON.stringify({ brandId: selectedBrandId, prompt: trimmed }),
       })
 
       const data = await response.json()
@@ -71,7 +119,20 @@ export default function BrandChat({ brands }: BrandChatProps) {
       }
 
       setReferences(data.insights || [])
-      setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
+          msg.id === optimisticId ? { ...msg, pending: false } : msg
+        )
+        return [
+          ...updated,
+          {
+            id: `assistant-${Date.now()}`,
+            role: "assistant",
+            content: data.response,
+            created_at: new Date().toISOString(),
+          },
+        ]
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to respond right now."
       toast({
@@ -79,10 +140,20 @@ export default function BrandChat({ brands }: BrandChatProps) {
         title: "Brand brain failed",
         description: message,
       })
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: `Brand could not respond right now: ${message}` },
-      ])
+      setMessages((prev) => {
+        const updated = prev.map((msg) =>
+          msg.id === optimisticId ? { ...msg, pending: false } : msg
+        )
+        return [
+          ...updated,
+          {
+            id: `assistant-error-${Date.now()}`,
+            role: "assistant",
+            content: `Brand could not respond right now: ${message}`,
+            created_at: new Date().toISOString(),
+          },
+        ]
+      })
     } finally {
       setLoading(false)
     }
@@ -96,7 +167,7 @@ export default function BrandChat({ brands }: BrandChatProps) {
   }
 
   return (
-    <Card className="p-6">
+    <LuminousPanel className="p-6">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <BrandSelector
@@ -104,8 +175,6 @@ export default function BrandChat({ brands }: BrandChatProps) {
             selectedBrandId={selectedBrandId}
             onBrandChange={(id) => {
               setSelectedBrandId(id)
-              setMessages([])
-              setReferences([])
             }}
           />
           <div className="flex items-center gap-2 text-sm text-white/60">
@@ -115,17 +184,29 @@ export default function BrandChat({ brands }: BrandChatProps) {
         </div>
 
         <div className="h-[420px] space-y-3 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-4">
-          {messages.length === 0 && (
+          {historyLoading && (
+            <div className="flex items-center justify-center py-10 text-white/60">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Loading chat history...
+            </div>
+          )}
+          {!historyLoading && messages.length === 0 && (
             <p className="text-sm text-white/50">Ask your brand about strategy, prompts, or guardrails.</p>
           )}
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <div
-              key={index}
+              key={message.id || message.created_at || `${message.role}-${Math.random()}`}
               className={`p-3 rounded-lg text-sm whitespace-pre-wrap ${
                 message.role === "user" ? "bg-primary/20 ml-auto max-w-[80%]" : "bg-white/5 mr-auto max-w-[85%]"
-              }`}
+              } ${message.pending ? "opacity-70" : ""}`}
             >
               {message.content}
+              {message.created_at && (
+                <p className="mt-2 text-[10px] uppercase tracking-wide text-white/40">
+                  {formatTimestamp(message.created_at)}
+                  {message.pending ? " • sending" : ""}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -177,6 +258,13 @@ export default function BrandChat({ brands }: BrandChatProps) {
           </div>
         )}
       </div>
-    </Card>
+    </LuminousPanel>
   )
+}
+
+function formatTimestamp(timestamp?: string) {
+  if (!timestamp) return ""
+  const date = new Date(timestamp)
+  if (Number.isNaN(date.getTime())) return ""
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }

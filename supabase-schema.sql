@@ -94,6 +94,18 @@ CREATE INDEX IF NOT EXISTS idx_generations_content_item_id ON generations(conten
 CREATE INDEX IF NOT EXISTS idx_assets_content_item_id ON assets(content_item_id);
 CREATE INDEX IF NOT EXISTS idx_templates_brand_id ON templates(brand_id);
 
+-- Brand chat history table
+CREATE TABLE IF NOT EXISTS brand_chat_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  brand_id UUID NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_brand_chat_messages_brand_created
+  ON brand_chat_messages(brand_id, created_at);
+
 -- Brand vectors table for brain memory
 CREATE TABLE IF NOT EXISTS brand_vectors (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -148,7 +160,7 @@ BEGIN
     bv.metadata,
     1 - (bv.embedding <=> query_embedding) AS similarity
   FROM brand_vectors bv
-  WHERE bv.brand_id = brand_id
+  WHERE bv.brand_id = match_brand_vectors.brand_id
   ORDER BY bv.embedding <=> query_embedding
   LIMIT GREATEST(match_count, 1);
 END;
@@ -161,6 +173,7 @@ ALTER TABLE content_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE generations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE brand_chat_messages ENABLE ROW LEVEL SECURITY;
 
 -- Create permissive policies for single-user app (allow all operations)
 DROP POLICY IF EXISTS "Allow all operations on brands" ON brands;
@@ -175,3 +188,5 @@ DROP POLICY IF EXISTS "Allow all operations on assets" ON assets;
 CREATE POLICY "Allow all operations on assets" ON assets FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Allow all operations on templates" ON templates;
 CREATE POLICY "Allow all operations on templates" ON templates FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all operations on brand_chat_messages" ON brand_chat_messages;
+CREATE POLICY "Allow all operations on brand_chat_messages" ON brand_chat_messages FOR ALL USING (true) WITH CHECK (true);

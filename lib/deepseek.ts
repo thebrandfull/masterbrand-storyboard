@@ -1,6 +1,7 @@
 import type { BrandSuggestions } from "@/types/brand"
 import type { BrandBrainContext } from "@/lib/brand-brain"
 import type { Database } from "@/types/database"
+import type { ScriptUpgradeRequest, ScriptUpgrade } from "@/types/youtube"
 
 type BrandRow = Database["public"]["Tables"]["brands"]["Row"]
 type PromptBrand = Pick<
@@ -14,6 +15,7 @@ export interface PromptGenerationRequest {
   platform: string
   visualKeywords?: string[]
   negativePrompts?: string[]
+  cameos?: Array<{ name: string; description: string; visualDescription: string }>
 }
 
 export interface GeneratedContent {
@@ -22,6 +24,7 @@ export interface GeneratedContent {
   description: string
   tags: string[]
   thumbnailBrief: string
+  voiceoverScript?: string
 }
 
 interface BrandSuggestionInput {
@@ -59,7 +62,16 @@ export class DeepSeekError extends Error {
 export async function generateContent(
   request: PromptGenerationRequest
 ): Promise<GeneratedContent> {
-  const { brand, topic, platform, visualKeywords, negativePrompts } = request
+  const { brand, topic, platform, visualKeywords, negativePrompts, cameos } = request
+
+  const cameoSection = cameos?.length
+    ? cameos
+        .map(
+          (cameo) =>
+            `- ${cameo.name}: ${cameo.description} (visuals: ${cameo.visualDescription})`
+        )
+        .join("\n")
+    : "(none specified)"
 
   const systemPrompt = `You are an expert content creator and prompt engineer specializing in creating video content prompts for social media. Your task is to generate creative, platform-specific content based on brand guidelines.`
 
@@ -80,6 +92,9 @@ DON'T: ${brand.donts?.join(", ")}
 VISUAL GUIDELINES:
 Positive: ${visualKeywords?.join(", ") || brand.visual_lexicon}
 Negative (avoid): ${negativePrompts?.join(", ") || brand.negative_prompts?.join(", ")}
+
+CAMEO CHARACTERS TO FEATURE:
+${cameoSection}
 
 PLATFORM CONSTRAINTS:
 ${getPlatformConstraints(platform)}
@@ -126,6 +141,7 @@ IMPORTANT:
         description: content.description || "",
         tags: content.tags || [],
         thumbnailBrief: content.thumbnailBrief || "",
+        voiceoverScript: content.voiceoverScript || content.description || "",
       }
     } catch (error) {
       lastError = normalizeDeepSeekError(error)
@@ -224,6 +240,105 @@ Guidelines:
   }
 
   throw lastError ?? new DeepSeekError("Suggestion generation failed.", "server")
+}
+
+export async function generateScriptUpgrade(
+  request: ScriptUpgradeRequest
+): Promise<ScriptUpgrade> {
+  const {
+    transcriptText,
+    videoTitle,
+    durationSeconds,
+    channelName,
+    goal,
+    issues,
+    audience,
+    tone,
+    callToAction,
+  } = request
+
+  const systemPrompt =
+    "You are a senior YouTube script showrunner. You tighten pacing, craft stronger hooks, and rewrite scripts into concise outlines while respecting the creator's voice."
+
+  const metaBlock = `TITLE: ${videoTitle}
+CHANNEL: ${channelName || "Unknown"}
+DURATION: ${durationSeconds ?? "Unknown"} seconds
+GOAL: ${goal || "Increase retention"}
+ISSUES TO FIX: ${issues || "None provided"}
+INTENDED AUDIENCE: ${audience || "General"}
+TONE: ${tone || "Energetic"}
+CTA FOCUS: ${callToAction || "Encourage viewers to subscribe"}`
+
+  const userPrompt = `Refine the following YouTube script transcript. Keep the creator's expertise but remove repetition, tighten pacing, and reframe it around a bold hook.
+
+${metaBlock}
+
+ORIGINAL TRANSCRIPT:
+"""
+${transcriptText}
+"""
+
+Return JSON with this exact shape:
+{
+  "hook": "single captivating opening line",
+  "refinedIdea": "core premise tightened into one sentence",
+  "outline": [
+    {
+      "label": "Beat label",
+      "summary": "one sentence beat summary",
+      "detail": "two to three sentences elaborating the beat",
+      "upgrade": "specific change vs original"
+    }
+  ],
+  "improvements": ["list of concrete upgrade bullet points"],
+  "ctas": ["2-3 short CTA variations"],
+  "risks": ["call out any claims, compliance or retention risks"],
+  "closing": "one sentence closing line"
+}
+
+Rules:
+- Outline must be chronological, 4-8 beats.
+- Keep language concise (<= 20 words per sentence when possible).
+- Improvements should be specific ("Cut redundant anecdote in minute 4" etc.).
+- If transcript lacks detail, propose creative fills but label them as suggestions.
+`
+
+  let lastError: DeepSeekError | null = null
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const data = await callDeepSeek(systemPrompt, userPrompt)
+      const raw = data?.choices?.[0]?.message?.content
+
+      if (!raw) {
+        throw new DeepSeekError("DeepSeek returned an empty script upgrade.", "server")
+      }
+
+      const parsed = JSON.parse(raw)
+
+      return {
+        hook: parsed.hook || "",
+        refinedIdea: parsed.refinedIdea || "",
+        outline: Array.isArray(parsed.outline) ? parsed.outline : [],
+        improvements: parsed.improvements || [],
+        ctas: parsed.ctas || [],
+        risks: parsed.risks || [],
+        closing: parsed.closing || "",
+      }
+    } catch (error) {
+      lastError = normalizeDeepSeekError(error)
+      const shouldRetry = canRetry(lastError.code) && attempt < MAX_ATTEMPTS
+
+      if (!shouldRetry) {
+        throw lastError
+      }
+
+      const delayMs = RETRY_DELAYS[attempt - 1] ?? 2000
+      await delay(delayMs)
+    }
+  }
+
+  throw lastError ?? new DeepSeekError("Failed to upgrade script with DeepSeek.", "server")
 }
 
 function getPlatformConstraints(platform: string): string {
@@ -403,7 +518,7 @@ function normalizeSuggestionArray(value: unknown): string[] {
 }
 export async function generateBrandChatResponse(request: BrandChatRequest) {
   const { brandName, contextSummary, history, prompt, vectorInsights } = request
-  const systemPrompt = `You are ${brandName}'s internal operating brain. Respond like the founder speaking to their own team—never to customers. Stay tactical, specific, and brutally honest. Always speak in first-person plural ("we") and keep output under 250 words.`
+  const systemPrompt = `You are ${brandName}'s internal operating brain. Respond like the founder chatting with their team—never with customers. Sound natural, candid, and human. Use first-person plural ("we") with a confident but conversational tone. Offer clear takeaways, but avoid rigid templates or section headers. Keep replies under 220 words and cite references with [number] only when you quote them directly.`
 
   const referenceList = (vectorInsights || [])
     .slice(0, 5)
@@ -416,26 +531,16 @@ export async function generateBrandChatResponse(request: BrandChatRequest) {
     .join("\n")
 
   const referenceBlock = referenceList
-    ? `REFERENCE LIBRARY (cite with [number]):\n${referenceList}\n`
+    ? `REFERENCE LIBRARY (cite with [number] when referencing specific lines):\n${referenceList}\n`
     : ""
 
-  const formatRules = `Format every answer exactly as:
+  const replyGuidance = `Guidelines:
+- Start with a quick acknowledgement in plain language (e.g., "Hey, got it" or similar).
+- Share insights or decisions in one to two short paragraphs.
+- If actions are needed, list up to two short bullets prefixed with "•".
+- Skip headers like SNAPSHOT/NEXT MOVES; just talk like a person.`.trim()
 
-SNAPSHOT:
-- key insight
-
-NEXT MOVES:
-- action item
-
-RISKS:
-- potential issue (say "None" if clear)
-
-BLOCKERS:
-- what stops execution (or "None")
-
-Rules: max 3 bullets per section, no fluff, cite references with [number] when relevant. Respond immediately even if prompt is casual.`
-
-  const userPrompt = `TEAM CONTEXT (confidential):\n${contextSummary}\n\n${referenceBlock}${formatRules}\n\nREQUEST:\n${prompt}`
+  const userPrompt = `TEAM CONTEXT (confidential):\n${contextSummary}\n\n${referenceBlock}${replyGuidance}\n\nREQUEST FROM TEAM:\n${prompt}`
 
   const messages = [
     { role: "system", content: systemPrompt },

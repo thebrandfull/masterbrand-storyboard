@@ -18,6 +18,7 @@ export type CaptionAnimation =
   | 'glow-pulse' // Pulsing glow
   | 'rotate-in' // Rotate entrance
   | 'blur-in' // Blur to focus
+  | 'highlight'
 
 export type CaptionEffect =
   | 'none'

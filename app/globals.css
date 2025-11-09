@@ -4,28 +4,29 @@
 
 @layer base {
   :root {
-    --accent: #0951BF;
-    --bg: #0B0B0C;
-    --surface: rgba(255, 255, 255, 0.06);
-    --text: #EDEDED;
-    --muted: #9AA0A6;
-    --background: 240 6% 5%;
-    --foreground: 210 40% 96%;
-    --card: 240 6% 10%;
-    --card-foreground: 210 40% 96%;
-    --popover: 240 6% 8%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 217 90% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 6% 12%;
-    --secondary-foreground: 210 20% 90%;
-    --muted-foreground: 215 16% 70%;
-    --accent-foreground: 210 40% 96%;
+    --accent: #FF0033;
+    --bg: #0F0F0F;
+    --surface: rgba(32, 32, 32, 0.92);
+    --surface-soft: rgba(24, 24, 24, 0.88);
+    --text: #F1F1F1;
+    --muted: #B0B0B0;
+    --background: 0 0% 6%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 9%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 90%;
+    --muted-foreground: 0 0% 70%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 72% 50%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 240 5% 20%;
-    --input: 240 5% 20%;
-    --ring: 217 90% 39%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 16%;
+    --ring: 0 100% 50%;
     --radius: 0.75rem;
   }
 }
@@ -36,7 +37,7 @@
   }
 
   body {
-    background: var(--bg);
+    background: radial-gradient(circle at top, #1c1c1c 0%, #0f0f0f 58%, #0a0a0a 100%);
     color: var(--text);
     min-height: 100vh;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -46,10 +47,11 @@
 
 @layer components {
   .glass {
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(8px);
     background: var(--surface);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 0.75rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   }
 
   .hero-panel {
@@ -100,7 +102,7 @@
 
   .caption-word-active {
     transform: scale(1.05);
-    text-shadow: 0 12px 32px rgba(9, 81, 191, 0.45);
+    text-shadow: 0 12px 28px rgba(255, 0, 51, 0.35);
   }
 
   .caption-word-idle {
