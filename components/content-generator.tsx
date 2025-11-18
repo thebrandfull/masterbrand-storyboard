@@ -133,7 +133,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
   }
 
   return (
-    <Card className="space-y-6 p-6">
+    <Card className="space-y-6 border border-white/10 bg-white/5 p-5 sm:p-8">
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <div className="space-y-2">
@@ -193,7 +193,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
         <div className="space-y-2">
           <Label>Topic / hook / desired outcome</Label>
           <Textarea
-            className="h-full border border-white/10 bg-transparent text-[color:var(--text)] placeholder:text-[color:var(--muted)]"
+            className="min-h-[220px] border border-white/10 bg-transparent text-[color:var(--text)] placeholder:text-[color:var(--muted)]"
             placeholder="Example: 3 myths about scaling brand studios, ending with a CTA to book a workshop."
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
@@ -225,7 +225,7 @@ export default function ContentGenerator({ brands }: ContentGeneratorProps) {
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex justify-end">
+      <div className="mt-6 flex justify-end">
         <Button
           onClick={handleGenerate}
           disabled={loading || !brandId}

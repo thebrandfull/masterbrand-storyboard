@@ -222,6 +222,32 @@ export interface Database {
           created_at?: string
         }
       }
+      focus_sessions: {
+        Row: {
+          id: string
+          brand_id: string | null
+          duration_minutes: number
+          started_at: string
+          ended_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          brand_id?: string | null
+          duration_minutes: number
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          brand_id?: string | null
+          duration_minutes?: number
+          started_at?: string
+          ended_at?: string | null
+          created_at?: string
+        }
+      }
       brand_vectors: {
         Row: {
           id: string

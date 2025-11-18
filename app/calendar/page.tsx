@@ -179,24 +179,30 @@ export default function CalendarPage() {
         </div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-wrap gap-2">
         {monthlyStats.map((stat) => (
-          <Card
+          <button
             key={stat.value}
-            className={cn(
-              "cursor-pointer p-4 transition",
-              stat.active ? "ring-1 ring-[color:var(--accent)]" : "hover:bg-white/12"
-            )}
+            type="button"
             onClick={() => toggleStatus(stat.value)}
+            className={cn(
+              "glass flex items-center justify-between rounded-2xl border border-white/10 px-3 py-2 text-left text-xs transition sm:min-w-[150px]",
+              stat.active ? "ring-1 ring-[color:var(--accent)]" : "opacity-80 hover:opacity-100"
+            )}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.32em] text-[color:var(--muted)]">{stat.label}</p>
-                <p className="mt-2 text-2xl font-semibold text-[color:var(--text)]">{stat.count}</p>
-              </div>
-              <Badge className={getStatusColor(stat.value)}>{stat.active ? "On" : "Off"}</Badge>
+            <div>
+              <p className="text-[9px] uppercase tracking-[0.28em] text-[color:var(--muted)]">{stat.label}</p>
+              <p className="mt-1 text-xl font-semibold text-[color:var(--text)]">{stat.count}</p>
             </div>
-          </Card>
+            <Badge
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px]",
+                stat.active ? getStatusColor(stat.value) : "bg-white/5 text-[color:var(--muted)]"
+              )}
+            >
+              {stat.active ? "On" : "Off"}
+            </Badge>
+          </button>
         ))}
       </div>
 

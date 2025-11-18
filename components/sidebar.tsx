@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Calendar,
   Layers,
-  Zap,
   Sparkles,
   PenSquare,
   Video,
@@ -23,7 +22,6 @@ const navigation = [
   { name: "Content", href: "/content", icon: PenSquare },
   { name: "Brands", href: "/brands", icon: Layers },
   { name: "Brand Brain", href: "/brain", icon: Sparkles },
-  { name: "Bulk Generate", href: "/bulk", icon: Zap },
   { name: "Sora Generator", href: "/sora-generator", icon: Video },
 ]
 

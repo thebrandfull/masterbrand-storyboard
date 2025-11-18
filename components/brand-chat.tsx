@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { BrandSelector } from "@/components/brand-selector"
-import { Loader2, Sparkles } from "lucide-react"
+import { ChevronDown, Loader2, Sparkles } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { LuminousPanel } from "@/components/ui/luminous-panel"
 import type { BrandVectorInsight } from "@/lib/brand-brain"
@@ -34,6 +34,8 @@ export default function BrandChat({ brands }: BrandChatProps) {
   const [loading, setLoading] = useState(false)
   const [historyLoading, setHistoryLoading] = useState(false)
   const [references, setReferences] = useState<BrandVectorInsight[]>([])
+  const [expandedReferences, setExpandedReferences] = useState<Record<string, boolean>>({})
+  const [referencesCollapsed, setReferencesCollapsed] = useState(true)
   const { toast } = useToast()
 
   const loadHistory = useCallback(async (brandId: string) => {
@@ -119,6 +121,8 @@ export default function BrandChat({ brands }: BrandChatProps) {
       }
 
       setReferences(data.insights || [])
+      setReferencesCollapsed(true)
+      setExpandedReferences({})
       setMessages((prev) => {
         const updated = prev.map((msg) =>
           msg.id === optimisticId ? { ...msg, pending: false } : msg
@@ -164,6 +168,13 @@ export default function BrandChat({ brands }: BrandChatProps) {
       event.preventDefault()
       sendMessage()
     }
+  }
+
+  const toggleReference = (id: string) => {
+    setExpandedReferences((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }))
   }
 
   return (
@@ -235,26 +246,52 @@ export default function BrandChat({ brands }: BrandChatProps) {
 
         {references.length > 0 && (
           <div className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-4">
-            <div className="flex items-center justify-between text-xs uppercase tracking-wide text-white/40">
-              <span>Referenced memory</span>
-              <span>{references.length} snippet{references.length === 1 ? "" : "s"}</span>
-            </div>
-            <div className="space-y-3">
-              {references.map((ref) => {
-                const label = getReferenceLabel(ref.metadata as Record<string, unknown> | null)
-                return (
-                  <div key={ref.id} className="rounded-lg bg-white/5 p-3 border border-white/5">
-                    <p className="text-xs text-primary uppercase tracking-wide mb-1">
-                      {ref.type}
-                      {label ? ` • ${label}` : ""}
-                    </p>
-                  <p className="text-sm text-white/80 whitespace-pre-wrap">
-                    {ref.content.length > 320 ? `${ref.content.slice(0, 317)}…` : ref.content}
-                  </p>
-                  </div>
-                )
-              })}
-            </div>
+            <button
+              type="button"
+              onClick={() => setReferencesCollapsed((prev) => !prev)}
+              className="flex w-full items-center justify-between rounded-xl border border-white/5 bg-white/5 px-3 py-2 text-[11px] uppercase tracking-[0.25em] text-white/60 transition hover:text-white"
+            >
+              <span>
+                Referenced memory · {references.length} snippet{references.length === 1 ? "" : "s"}
+              </span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${referencesCollapsed ? "" : "rotate-180"}`}
+              />
+            </button>
+            {!referencesCollapsed && (
+              <div className="space-y-3">
+                {references.map((ref) => {
+                  const label = getReferenceLabel(ref.metadata as Record<string, unknown> | null)
+                  const isExpanded = expandedReferences[ref.id]
+                  return (
+                    <div key={ref.id} className="rounded-lg border border-white/5 bg-transparent p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] uppercase tracking-wide text-primary">
+                          {ref.type}
+                          {label ? ` • ${label}` : ""}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-[11px] uppercase tracking-wide text-white/60 hover:text-white"
+                          onClick={() => toggleReference(ref.id)}
+                        >
+                          {isExpanded ? "Hide" : "Show"}
+                        </Button>
+                      </div>
+                      {isExpanded && (
+                        <p className="text-sm text-white/80 whitespace-pre-wrap">{ref.content}</p>
+                      )}
+                      {!isExpanded && (
+                        <p className="text-sm text-white/60">
+                          {ref.content.length > 180 ? `${ref.content.slice(0, 177)}…` : ref.content}
+                        </p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>

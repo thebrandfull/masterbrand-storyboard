@@ -94,6 +94,19 @@ CREATE INDEX IF NOT EXISTS idx_generations_content_item_id ON generations(conten
 CREATE INDEX IF NOT EXISTS idx_assets_content_item_id ON assets(content_item_id);
 CREATE INDEX IF NOT EXISTS idx_templates_brand_id ON templates(brand_id);
 
+-- Focus sessions table
+CREATE TABLE IF NOT EXISTS focus_sessions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  brand_id UUID REFERENCES brands(id) ON DELETE SET NULL,
+  duration_minutes INTEGER NOT NULL CHECK (duration_minutes > 0),
+  started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ended_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_focus_sessions_brand_id ON focus_sessions(brand_id);
+CREATE INDEX IF NOT EXISTS idx_focus_sessions_started_at ON focus_sessions(started_at);
+
 -- Brand chat history table
 CREATE TABLE IF NOT EXISTS brand_chat_messages (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -174,6 +187,7 @@ ALTER TABLE generations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE assets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE brand_chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE focus_sessions ENABLE ROW LEVEL SECURITY;
 
 -- Create permissive policies for single-user app (allow all operations)
 DROP POLICY IF EXISTS "Allow all operations on brands" ON brands;
@@ -190,3 +204,5 @@ DROP POLICY IF EXISTS "Allow all operations on templates" ON templates;
 CREATE POLICY "Allow all operations on templates" ON templates FOR ALL USING (true) WITH CHECK (true);
 DROP POLICY IF EXISTS "Allow all operations on brand_chat_messages" ON brand_chat_messages;
 CREATE POLICY "Allow all operations on brand_chat_messages" ON brand_chat_messages FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow all operations on focus_sessions" ON focus_sessions;
+CREATE POLICY "Allow all operations on focus_sessions" ON focus_sessions FOR ALL USING (true) WITH CHECK (true);
